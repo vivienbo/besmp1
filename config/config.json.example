@@ -1,0 +1,93 @@
+{
+    "COMPortConfig": {
+        "port": "COM4",
+        "baudrate": 115200,
+        "timeout": 5
+    },
+    "p1Transform": {
+        "1-0:1.8.0": {
+            "operation": "sum",
+            "operands": [
+                "1-0:1.8.1",
+                "1-0:1.8.2"
+            ]
+        },
+        "1-0:2.8.0": {
+            "operation": "sum",
+            "operands": [
+                "1-0:2.8.1",
+                "1-0:2.8.2"
+            ]
+        }
+    },
+    "processors": {
+        "printMode": {
+            "type": "print",
+            "topics": {
+                "1-0:1.8.0": "smartmeter/electricity/reading/consumption/total",
+                "1-0:1.8.1": "smartmeter/electricity/reading/consumption/day_tariff",
+                "1-0:1.8.2": "smartmeter/electricity/reading/consumption/night_tariff",
+                "1-0:2.8.0": "smartmeter/electricity/reading/injection/total",
+                "1-0:2.8.1": "smartmeter/electricity/reading/injection/day_tariff",
+                "1-0:2.8.2": "smartmeter/electricity/reading/injection/night_tariff",
+                "1-0:21.7.0": "smartmeter/electricity/instant/L1/power/consumption",
+                "1-0:22.7.0": "smartmeter/electricity/instant/L1/power/injection",
+                "1-0:31.7.0": "smartmeter/electricity/instant/L1/intensity",
+                "1-0:32.7.0": "smartmeter/electricity/instant/L1/tension"                
+            }
+        },
+        "mqttShirka": {
+            "type": "mqtt",
+            "broker": "your.mqtt.domain.name.or.ip",
+            "tcpPort": 8883,
+            "username": "mqtt.username",
+            "password": "mqtt.password",
+            "topics": {
+                "1-0:1.8.0": "smartmeter/electricity/reading/consumption/total",
+                "1-0:1.8.1": "smartmeter/electricity/reading/consumption/day_tariff",
+                "1-0:1.8.2": "smartmeter/electricity/reading/consumption/night_tariff",
+                "1-0:2.8.0": "smartmeter/electricity/reading/injection/total",
+                "1-0:2.8.1": "smartmeter/electricity/reading/injection/day_tariff",
+                "1-0:2.8.2": "smartmeter/electricity/reading/injection/night_tariff",
+                "1-0:21.7.0": "smartmeter/electricity/instant/L1/power/consumption",
+                "1-0:22.7.0": "smartmeter/electricity/instant/L1/power/injection",
+                "1-0:31.7.0": "smartmeter/electricity/instant/L1/intensity",
+                "1-0:32.7.0": "smartmeter/electricity/instant/L1/tension"
+            }
+        }
+    },
+    "scheduling": [
+        {
+            "quartz": "0 * * ? * * *",
+            "processor": "mqttShirka",
+            "mode": "current",
+            "apply_to": [
+                "1-0:1.8.0",
+                "1-0:1.8.1",
+                "1-0:1.8.2",
+                "1-0:2.8.0",
+                "1-0:2.8.1",
+                "1-0:2.8.2"
+            ]
+        },
+        {
+            "quartz": "0/20 * * ? * * *",
+            "processor": "mqttShirka",
+            "mode": "current",
+            "apply_to": [
+                "1-0:21.7.0",
+                "1-0:22.7.0",
+                "1-0:31.7.0",
+                "1-0:32.7.0"
+            ]
+        },
+        {
+            "quartz": "0 0/1 * ? * * *",
+            "processor": "printMode",
+            "mode": "current",
+            "apply_to": [
+                "1-0:1.8.0"
+            ]
+        }
+    ]
+}
