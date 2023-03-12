@@ -1,7 +1,9 @@
-import json
-from datetime import datetime
 from cstriggers.core.trigger import QuartzCron
 from pytz import timezone
+
+import json
+import os
+from datetime import datetime
 
 from .scheduler import P1Scheduler
 from .processors import P1ProcessorFactory
@@ -9,13 +11,14 @@ from .processors import P1ProcessorFactory
 class P1Configuration:
 
     """
-        Configuration of the Belgian-SmartMeter-p1-to-MQTT
+        Configuration of the Belgian-SmartMeter-P1-to-MQTT
     """
 
     def __init__(self, configFileName: str):
-        configFile = open(configFileName)
+        configFile = open(os.path.join(os.path.dirname(__file__), configFileName))
         self.configData = json.load(configFile)
         configFile.close()
+
         self.processors = dict()
         self.filters = None
         self.__init__scheduling()
@@ -27,11 +30,15 @@ class P1Configuration:
             endDate = datetime.now(timezone('UTC')).replace(year = startDate.year + 10, day= 28)
 
             schedule["cron"] = QuartzCron(schedule_string=schedule["quartz"], start_date=startDate, end_date=endDate)
+            
+            # Resolves a bug from QuartzCron which does not set milliseconds at zero in the next_trigger
             schedule["cron_next_trigger"] = schedule["cron"].next_trigger().replace(microsecond=0)
+
             if (schedule["mode"] == "average"):
                 schedule["history"] = dict()
                 for obisId in schedule["apply_to"]:
                     schedule["history"][obisId] = list()
+        
         self.scheduler = P1Scheduler(self)
     
     def __init__processors(self):

@@ -1,11 +1,10 @@
 import serial
 
-from queue import Queue, Empty
-from threading import Thread, Semaphore, Event
+from queue import Queue
+from threading import Thread, Event
 import re
 import time
 
-from .configuration import P1Configuration
 from .sequence import P1Sequence
 
 class ReadFromCOMPortThread(Thread):
@@ -19,7 +18,7 @@ class ReadFromCOMPortThread(Thread):
             datalines forever without checking the stopReadingEvent
     """
 
-    def __init__(self, rawDataQueue: Queue, stopReadingEvent: Event, configuration: P1Configuration):
+    def __init__(self, rawDataQueue: Queue, stopReadingEvent: Event, configuration):
         Thread.__init__(self)
         self.rawDataQueue = rawDataQueue
         self.stopReadingEvent = stopReadingEvent
@@ -57,7 +56,7 @@ class ParseP1RawDataThread (Thread):
         and transmit them to the p1SequenceQueue.
     """
 
-    def __init__(self, rawDataQueue: Queue, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration: P1Configuration):
+    def __init__(self, rawDataQueue: Queue, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration):
         Thread.__init__(self)
         self.rawDataQueue = rawDataQueue
         self.p1SequenceQueue = p1SequenceQueue
@@ -101,7 +100,7 @@ class ProcessP1SequencesThread(Thread):
         as instructed by the P1Configuration
     """
 
-    def __init__(self, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration: P1Configuration):
+    def __init__(self, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration):
         Thread.__init__(self)
         self.p1SequenceQueue = p1SequenceQueue
         self.stopReadingEvent = stopReadingEvent
@@ -126,12 +125,20 @@ class ProcessP1SequencesThread(Thread):
 
 class HealthControllerThread (Thread):
 
-    def __init__(self, stopReadingEvent: Event, configuration: P1Configuration):
+    """
+        A Thread which stops all other threads (by setting the stopReadingEvent) after a certain period of time.
+        Used for troubleshooting and for monitoring period (unidentified issue with Quartz).
+    """
+
+    def __init__(self, stopReadingEvent: Event, configuration):
         Thread.__init__(self)
         self.stopReading = stopReadingEvent
-        self.daemon = True
-        self.counter = 2160
         self.globalConfiguration = configuration
+
+        self.daemon = True
+        # Todo make counter configurable
+        self.counter = 2160
+
     
     def run(self):
         print("HealthControllerThread :: starting, will stop all threads in ~6 hours")
