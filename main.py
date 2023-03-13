@@ -1,10 +1,25 @@
 from queue import Queue
-from threading import Event
+from threading import Event, Thread
 import time
 import os
 
 import besmreader.threads as besmThreads
 import besmreader.configuration as besmConfig
+
+def checkAllThreadsAreAlive(*threads: Thread):
+    allThreadsAreAlive = True
+    for thisThread in threads:
+        thisThread.join(0.1)
+        allThreadsAreAlive = allThreadsAreAlive and thisThread.is_alive()
+    return allThreadsAreAlive
+
+def waitForAllThreadsToFinish(*threads: Thread):
+    for thisThread in threads:
+        thisThread.join()
+
+def startAllThreads(*threads: Thread):
+    for thisThread in threads:
+        thisThread.start()
 
 while True:
     print('Reading P1 Configuration')
@@ -33,36 +48,19 @@ while True:
     parserThread = besmThreads.ParseP1RawDataThread(rawQueue, p1SequenceQueue, stopReadingEvent, globalConfiguration)
     readerThread = besmThreads.ReadFromCOMPortThread(rawQueue, stopReadingEvent, globalConfiguration)
 
-    processorThread.start()
-    parserThread.start()
-    readerThread.start()
-
-    healthThread.start()
+    startAllThreads(processorThread, parserThread, readerThread, healthThread)
 
     while (not stopReadingEvent.is_set()):
-        processorThread.join(0.1)
-        if (not processorThread.is_alive()):
+        
+        if(not checkAllThreadsAreAlive(processorThread, parserThread, readerThread, healthThread)):
             stopReadingEvent.set()
-        parserThread.join(0.1)
-        if (not parserThread.is_alive()):
-            stopReadingEvent.set()
-        readerThread.join(0.1)
-        if (not readerThread.is_alive()):
-            stopReadingEvent.set()
-        healthThread.join(0.1)
-
-        if (not healthThread.is_alive()):
-            stopReadingEvent.set()
+        
         time.sleep(20)
 
     print('Waiting for threads to terminate...')
+    
     readerThread.closePort()
-
-    processorThread.join()
-    parserThread.join()
-    readerThread.join()
-    # TODO:: Add health thread check
-
+    waitForAllThreadsToFinish(processorThread, parserThread, readerThread, healthThread)
     print('All Threads terminated, relaunching...')
 
     print('Closing processors')

@@ -82,7 +82,7 @@
             ]
         },
         {
-            "quartz": "0 0/1 * ? * * *",
+            "quartz": "0 0/10 * ? * * *",
             "processor": "printMode",
             "mode": "current",
             "apply_to": [
