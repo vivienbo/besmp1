@@ -2,13 +2,30 @@ from queue import Queue
 from threading import Event, Thread
 import time
 import os
+import signal
 
 import besmreader.threads as besmThreads
 from besmreader.threads import ThreadHelper
 
 import besmreader.configuration as besmConfig
 
-while True:
+"""
+    Setup to stop the program properly using CTRL+C
+"""
+stopProgramEvent = Event()
+sharedStopEvent = Event()
+
+def beSMSignalHandler(sigNum, Frame):
+    print("Stopping the program when all threads are finished...", flush=True)
+    stopProgramEvent.set()
+    sharedStopEvent.set()
+
+signal.signal(signal.SIGINT, beSMSignalHandler)
+
+"""
+    Main program loop, launching and controlling threads execution
+"""
+while (not stopProgramEvent.is_set()):
     print('Reading P1 Configuration')
     globalConfiguration = None
     configLoaded = False
@@ -23,24 +40,24 @@ while True:
 
     # Create a shared event to stop all threads
     print('Creating Shared Event Controller')
-    stopReadingEvent = Event()
+    sharedStopEvent = Event()
 
     # Create the shared queues
     print('Creating Shared Queues')
     rawQueue = Queue()
     p1SequenceQueue = Queue()
 
-    healthThread = besmThreads.HealthControllerThread(stopReadingEvent, globalConfiguration)
-    processorThread = besmThreads.ProcessP1SequencesThread(p1SequenceQueue, stopReadingEvent, globalConfiguration)
-    parserThread = besmThreads.ParseP1RawDataThread(rawQueue, p1SequenceQueue, stopReadingEvent, globalConfiguration)
-    readerThread = besmThreads.ReadFromCOMPortThread(rawQueue, stopReadingEvent, globalConfiguration)
+    healthThread = besmThreads.HealthControllerThread(sharedStopEvent, globalConfiguration)
+    processorThread = besmThreads.ProcessP1SequencesThread(p1SequenceQueue, sharedStopEvent, globalConfiguration)
+    parserThread = besmThreads.ParseP1RawDataThread(rawQueue, p1SequenceQueue, sharedStopEvent, globalConfiguration)
+    readerThread = besmThreads.ReadFromCOMPortThread(rawQueue, sharedStopEvent, globalConfiguration)
 
     ThreadHelper.startAllThreads(processorThread, parserThread, readerThread, healthThread)
 
-    while (not stopReadingEvent.is_set()):
+    while (not sharedStopEvent.is_set()):
         
         if(not ThreadHelper.checkAllThreadsAreAlive(processorThread, parserThread, readerThread, healthThread)):
-            stopReadingEvent.set()
+            sharedStopEvent.set()
         
         time.sleep(20)
 
