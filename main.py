@@ -4,22 +4,9 @@ import time
 import os
 
 import besmreader.threads as besmThreads
+from besmreader.threads import ThreadHelper
+
 import besmreader.configuration as besmConfig
-
-def checkAllThreadsAreAlive(*threads: Thread):
-    allThreadsAreAlive = True
-    for thisThread in threads:
-        thisThread.join(0.1)
-        allThreadsAreAlive = allThreadsAreAlive and thisThread.is_alive()
-    return allThreadsAreAlive
-
-def waitForAllThreadsToFinish(*threads: Thread):
-    for thisThread in threads:
-        thisThread.join()
-
-def startAllThreads(*threads: Thread):
-    for thisThread in threads:
-        thisThread.start()
 
 while True:
     print('Reading P1 Configuration')
@@ -48,11 +35,11 @@ while True:
     parserThread = besmThreads.ParseP1RawDataThread(rawQueue, p1SequenceQueue, stopReadingEvent, globalConfiguration)
     readerThread = besmThreads.ReadFromCOMPortThread(rawQueue, stopReadingEvent, globalConfiguration)
 
-    startAllThreads(processorThread, parserThread, readerThread, healthThread)
+    ThreadHelper.startAllThreads(processorThread, parserThread, readerThread, healthThread)
 
     while (not stopReadingEvent.is_set()):
         
-        if(not checkAllThreadsAreAlive(processorThread, parserThread, readerThread, healthThread)):
+        if(not ThreadHelper.checkAllThreadsAreAlive(processorThread, parserThread, readerThread, healthThread)):
             stopReadingEvent.set()
         
         time.sleep(20)
@@ -60,7 +47,7 @@ while True:
     print('Waiting for threads to terminate...')
     
     readerThread.closePort()
-    waitForAllThreadsToFinish(processorThread, parserThread, readerThread, healthThread)
+    ThreadHelper.waitForAllThreadsToFinish(processorThread, parserThread, readerThread, healthThread)
     print('All Threads terminated, relaunching...')
 
     print('Closing processors')

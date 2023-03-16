@@ -141,7 +141,7 @@ class HealthControllerThread (Thread):
 
     
     def run(self):
-        print("HealthControllerThread :: starting, will stop all threads in ~6 hours")
+        print("HealthControllerThread :: starting, will stop all threads in ~6 hours due to issue #2 (quartz bug)")
         while (not self.stopReading.is_set()) and (self.counter >= 0):
             self.counter -= 1
             time.sleep(10)
@@ -151,3 +151,26 @@ class HealthControllerThread (Thread):
             self.stopReading.set()
         
         print('HealthControllerThread :: Stopped')
+
+class ThreadHelper:
+
+    def __init__(self) -> None:
+        pass
+
+    @staticmethod
+    def startAllThreads(*threads: Thread):
+        for thisThread in threads:
+            thisThread.start()
+
+    @staticmethod
+    def checkAllThreadsAreAlive(*threads: Thread) -> bool:
+        allThreadsAreAlive = True
+        for thisThread in threads:
+            thisThread.join(0.1)
+            allThreadsAreAlive = allThreadsAreAlive and thisThread.is_alive()
+        return allThreadsAreAlive
+
+    @staticmethod
+    def waitForAllThreadsToFinish(*threads: Thread):
+        for thisThread in threads:
+            thisThread.join()
