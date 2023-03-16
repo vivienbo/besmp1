@@ -58,7 +58,7 @@
     },
     "scheduling": [
         {
-            "quartz": "0 * * ? * * *",
+            "cron_format": "* * * * *",
             "processor": "mqttShirka",
             "mode": "current",
             "apply_to": [
@@ -71,7 +71,7 @@
             ]
         },
         {
-            "quartz": "0/20 * * ? * * *",
+            "cron_format": "* * * * * 0/20",
             "processor": "mqttShirka",
             "mode": "current",
             "apply_to": [
@@ -82,7 +82,7 @@
             ]
         },
         {
-            "quartz": "0 0/10 * ? * * *",
+            "cron_format": "0/10 * * * *",
             "processor": "printMode",
             "mode": "current",
             "apply_to": [
