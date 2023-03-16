@@ -46,6 +46,7 @@ class MQTTP1Processor(P1Processor):
         A P1 Port Information processor that sends data to MQTT
     """
 
+    @staticmethod
     def on_connect(client: paho.Client, userdata, flags, rc):
         if (rc==0):
             print("Connected successfully to MQTT")
@@ -55,7 +56,7 @@ class MQTTP1Processor(P1Processor):
     def __init__(self, processorConfig: str):
         super().__init__(processorConfig)
         self.mqttClient = paho.Client(client_id="belgian-smartmeter-p1-to-mqtt")
-        self.mqttClient.on_connect=self.on_connect
+        self.mqttClient.on_connect = MQTTP1Processor.on_connect
         
         crtFileName = os.path.abspath(os.path.join(os.getcwd(), 'config', 'config.crt'))
         self.mqttClient.tls_set(ca_certs=crtFileName, tls_version=ssl.PROTOCOL_TLSv1_2, cert_reqs=ssl.CERT_NONE)
