@@ -1,4 +1,5 @@
-from cstriggers.core.trigger import QuartzCron
+from croniter import croniter
+from tzlocal import get_localzone
 from pytz import timezone
 
 import json
@@ -26,13 +27,11 @@ class P1Configuration:
 
     def __init__scheduling(self):
         for schedule in self.configData['scheduling']:
-            startDate = datetime.now(timezone('UTC'))
-            endDate = datetime.now(timezone('UTC')).replace(year = startDate.year + 10, day= 28)
+            localTimeZone=get_localzone()
+            startDate = datetime.now(localTimeZone)
 
-            schedule["cron"] = QuartzCron(schedule_string=schedule["quartz"], start_date=startDate, end_date=endDate)
-            
-            # Resolves a bug from QuartzCron which does not set milliseconds at zero in the next_trigger
-            schedule["cron_next_trigger"] = schedule["cron"].next_trigger().replace(microsecond=0)
+            schedule["cron"] = croniter(schedule["cron_format"], startDate)
+            schedule["cron_next_trigger"] = schedule["cron"].get_next(datetime)
 
             if (schedule["mode"] == "average"):
                 schedule["history"] = dict()

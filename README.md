@@ -36,7 +36,8 @@ The following packages are required. They can all be installed using pip:
 
     pip install paho-mqtt
     pip install pytz
-    pip install cron-schedule-triggers
+    pip install tzlocal
+    pip install croniter
     pip install pyserial
 
 ### TODO

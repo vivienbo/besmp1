@@ -1,4 +1,5 @@
 from statistics import mean
+from datetime import datetime
 from .sequence import P1Sequence
 
 class P1Scheduler:
@@ -21,7 +22,7 @@ class P1Scheduler:
                         schedule["history"][obisId].clear()
 
                 self.processor.processSequence(p1Sequence, schedule["apply_to"])
-                schedule["cron_next_trigger"] = schedule["cron"].next_trigger().replace(microsecond=0)
+                schedule["cron_next_trigger"] = schedule["cron"].get_next(datetime)
             else:
                 if (schedule["mode"] == "average"):
                     for obisId in schedule["apply_to"]:

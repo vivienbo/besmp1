@@ -141,7 +141,7 @@ class HealthControllerThread (Thread):
 
     
     def run(self):
-        print("HealthControllerThread :: starting, will stop all threads in ~6 hours due to issue #2 (quartz bug)")
+        print("HealthControllerThread :: starting, will stop all threads in ~6 hours until stability is confirmed")
         while (not self.stopReading.is_set()) and (self.counter >= 0):
             self.counter -= 1
             time.sleep(10)
