@@ -1,3 +1,4 @@
+from collections import deque
 from queue import Queue
 from threading import Event, Thread
 import time
@@ -47,16 +48,24 @@ while (not stopProgramEvent.is_set()):
     rawQueue = Queue()
     p1SequenceQueue = Queue()
 
-    healthThread = besmThreads.HealthControllerThread(sharedStopEvent, globalConfiguration)
-    processorThread = besmThreads.ProcessP1SequencesThread(p1SequenceQueue, sharedStopEvent, globalConfiguration)
-    parserThread = besmThreads.ParseP1RawDataThread(rawQueue, p1SequenceQueue, sharedStopEvent, globalConfiguration)
     readerThread = besmThreads.ReadFromCOMPortThread(rawQueue, sharedStopEvent, globalConfiguration)
 
-    ThreadHelper.startAllThreads(processorThread, parserThread, readerThread, healthThread)
+    threadsDeque = deque([
+        besmThreads.ProcessP1SequencesThread(p1SequenceQueue, sharedStopEvent, globalConfiguration),
+        besmThreads.ParseP1RawDataThread(rawQueue, p1SequenceQueue, sharedStopEvent, globalConfiguration),
+        readerThread
+    ])
+
+    if (globalConfiguration.isHealthControlEnabled()):
+        threadsDeque.appendleft(besmThreads.HealthControllerThread(sharedStopEvent, globalConfiguration))
+
+    threadsList = list(threadsDeque)
+
+    ThreadHelper.startAllThreads(*threadsList)
 
     while (not sharedStopEvent.is_set()):
         
-        if(not ThreadHelper.checkAllThreadsAreAlive(processorThread, parserThread, readerThread, healthThread)):
+        if(not ThreadHelper.checkAllThreadsAreAlive(*threadsList)):
             sharedStopEvent.set()
         
         time.sleep(20)
@@ -64,10 +73,10 @@ while (not stopProgramEvent.is_set()):
     print('Waiting for threads to terminate...')
     
     readerThread.closePort()
-    ThreadHelper.waitForAllThreadsToFinish(processorThread, parserThread, readerThread, healthThread)
+    ThreadHelper.waitForAllThreadsToFinish(*threadsList)
     print('All Threads terminated, relaunching...')
 
     print('Closing processors')
     globalConfiguration.closeProcessors()
 
-    time.sleep(5)
+    time.sleep(globalConfiguration.getTimeoutCycleLength())

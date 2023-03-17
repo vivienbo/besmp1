@@ -1,4 +1,8 @@
 {
+    "healthControl": {
+        "enable": true,
+        "lifetime_cycles": 4320
+    },
     "COMPortConfig": {
         "port": "COM4",
         "baudrate": 115200,

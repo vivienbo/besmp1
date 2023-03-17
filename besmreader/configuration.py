@@ -50,8 +50,13 @@ class P1Configuration:
              self.processors[processorName].closeProcessor()
 
     def getCOMPortConfig(self):
+        if (not "timeout" in self.configData["COMPortConfig"]):
+            self.configData["COMPortConfig"]["timeout"] = 5
         return self.configData["COMPortConfig"]
     
+    def getTimeoutCycleLength(self) -> int:
+        return self.getCOMPortConfig()["timeout"]
+
     def getP1Transformations(self):
         return self.configData["p1Transform"]
     
@@ -74,3 +79,14 @@ class P1Configuration:
 
     def getProcessor(self, processorName: str):
         return self.processors[processorName]
+    
+    def isHealthControlEnabled(self) -> bool:
+        if ("healthControl" in self.configData):
+            return self.configData["healthControl"]["enable"]
+        return False
+
+    # Default value is 2160 cycles
+    def getHealthControlMaxLifetimeCycles(self) -> int:
+        if (self.isHealthControlEnabled):
+            return self.configData["healthControl"]["lifetime_cycles"]
+        return 2160

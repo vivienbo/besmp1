@@ -18,7 +18,7 @@ class ReadFromCOMPortThread(Thread):
             datalines forever without checking the stopReadingEvent
     """
 
-    def __init__(self, rawDataQueue: Queue, stopReadingEvent: Event, configuration):
+    def __init__(self, rawDataQueue: Queue, stopReadingEvent: Event, configuration) -> None:
         Thread.__init__(self)
         self.rawDataQueue = rawDataQueue
         self.stopReadingEvent = stopReadingEvent
@@ -26,7 +26,7 @@ class ReadFromCOMPortThread(Thread):
         self.comPort = None
         self.globalConfiguration = configuration
     
-    def run(self):
+    def run(self) -> None:
         print('ReadFromComPortThread :: Starting...')
         try:
             serialConfig = self.globalConfiguration.getCOMPortConfig()
@@ -42,7 +42,7 @@ class ReadFromCOMPortThread(Thread):
         self.closePort()
         print('ReadFromComPortThread :: Stopped')
     
-    def closePort(self):
+    def closePort(self) -> None:
         if (self.comPort is not None):
             try: 
                 self.comPort.close()
@@ -56,7 +56,7 @@ class ParseP1RawDataThread (Thread):
         and transmit them to the p1SequenceQueue.
     """
 
-    def __init__(self, rawDataQueue: Queue, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration):
+    def __init__(self, rawDataQueue: Queue, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration) -> None:
         Thread.__init__(self)
         self.rawDataQueue = rawDataQueue
         self.p1SequenceQueue = p1SequenceQueue
@@ -66,11 +66,11 @@ class ParseP1RawDataThread (Thread):
         self.currentSequence = P1Sequence(None, self.globalConfiguration)
         self.daemon = True
     
-    def run(self):
+    def run(self) -> None:
         print('ParseP1RawDataThread :: Starting...')
         try:
             while (not self.stopReadingEvent.is_set()):
-                rawDataLine = self.rawDataQueue.get(True, 10)
+                rawDataLine = self.rawDataQueue.get(True, self.globalConfiguration.getTimeoutCycleLength())
                 if (len(rawDataLine) > 2):
                     cleanDataLine = str(rawDataLine).rstrip()
                     if (self.isObjectStart(cleanDataLine)):
@@ -87,10 +87,10 @@ class ParseP1RawDataThread (Thread):
         
         print('ParseP1RawDataThread :: Stopped')
 
-    def isObjectStart(self, data):
+    def isObjectStart(self, data) -> bool:
         return len(re.findall(r'/\w{4}\\', data)) != 0
     
-    def isObjectEnd(self, data):
+    def isObjectEnd(self, data) -> bool:
         return len(re.findall(r'![0-9A-F]{4}', data)) != 0
 
 class ProcessP1SequencesThread(Thread):
@@ -100,7 +100,7 @@ class ProcessP1SequencesThread(Thread):
         as instructed by the P1Configuration
     """
 
-    def __init__(self, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration):
+    def __init__(self, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration) -> None:
         Thread.__init__(self)
         self.p1SequenceQueue = p1SequenceQueue
         self.stopReadingEvent = stopReadingEvent
@@ -108,12 +108,12 @@ class ProcessP1SequencesThread(Thread):
         self.daemon = True
         self.globalConfiguration = configuration
     
-    def run(self):
+    def run(self) -> None:
         print('ProcessP1Sequences :: Starting...')
 
         try:
             while (not self.stopReadingEvent.is_set()):
-                p1Sequence = self.p1SequenceQueue.get(True, 10)
+                p1Sequence = self.p1SequenceQueue.get(True, self.globalConfiguration.getTimeoutCycleLength())
                 if (p1Sequence is not None):
                     self.globalConfiguration.getScheduler().processP1(p1Sequence)
         except Exception as exceptionMet:
@@ -130,21 +130,21 @@ class HealthControllerThread (Thread):
         Used for troubleshooting and for monitoring period (unidentified issue with Quartz).
     """
 
-    def __init__(self, stopReadingEvent: Event, configuration):
+    def __init__(self, stopReadingEvent: Event, configuration) -> None:
         Thread.__init__(self)
         self.stopReading = stopReadingEvent
         self.globalConfiguration = configuration
 
         self.daemon = True
         # Todo make counter configurable
-        self.counter = 2160
+        self.counter = configuration.getHealthControlMaxLifetimeCycles()
 
     
-    def run(self):
-        print("HealthControllerThread :: starting, will stop all threads in ~6 hours until stability is confirmed")
+    def run(self) -> None:
+        print("HealthControllerThread :: starting, will stop all threads in ", self.counter * self.globalConfiguration.getCOMPortConfig()["timeout"], ' seconds')
         while (not self.stopReading.is_set()) and (self.counter >= 0):
             self.counter -= 1
-            time.sleep(10)
+            time.sleep(self.globalConfiguration.getTimeoutCycleLength())
 
         if (self.counter <= 0):
             print("HealthControllerThread :: Trying to stop all threads")
@@ -158,7 +158,7 @@ class ThreadHelper:
         pass
 
     @staticmethod
-    def startAllThreads(*threads: Thread):
+    def startAllThreads(*threads: Thread) -> None:
         for thisThread in threads:
             thisThread.start()
 
@@ -171,6 +171,6 @@ class ThreadHelper:
         return allThreadsAreAlive
 
     @staticmethod
-    def waitForAllThreadsToFinish(*threads: Thread):
+    def waitForAllThreadsToFinish(*threads: Thread) -> None:
         for thisThread in threads:
             thisThread.join()
