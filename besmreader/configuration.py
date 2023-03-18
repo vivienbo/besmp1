@@ -11,6 +11,15 @@ from datetime import datetime
 from .scheduler import P1Scheduler
 from .processors import P1ProcessorFactory, P1Processor
 
+class P1ConfigurationError (Exception):
+    """
+        Exception in the P1Configuration of the overall module
+    """
+
+    def __init__(self, message="Configuration is incorrect"):
+        super().__init__(self.message)
+
+
 class P1Configuration:
 
     """

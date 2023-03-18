@@ -116,5 +116,4 @@ class P1ProcessorFactory:
         if (processorConfig["type"] in thisMap):
             return thisMap[processorConfig["type"]](processorConfig)
         
-        # TODO Exception
-        return None
+        raise P1ConfigurationError('Configuration error: Processor type does not exist: ' + processorConfig["type"]) # type: ignore
