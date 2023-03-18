@@ -1,19 +1,21 @@
 from statistics import mean
 from datetime import datetime
+
 from .sequence import P1Sequence
+
 
 class P1Scheduler:
 
     def __init__(self, config):
-        self.schedules = config.getScheduling()
-        self.config = config
+        self.__schedules = config.scheduling
+        self.__config = config
 
     def processP1(self, p1Sequence: P1Sequence):
         p1Sequence.applyTransformations()
 
-        for schedule in self.schedules:
-            if (p1Sequence.getMessageTime() >= schedule["cron_next_trigger"]):
-                self.processor = self.config.getProcessor(schedule["processor"])
+        for schedule in self.__schedules:
+            if (p1Sequence.messageTimeinSystemTimezone >= schedule["cron_next_trigger"]):
+                self.processor = self.__config.getProcessor(schedule["processor"])
 
                 if (schedule["mode"] == "average"):
                     for obisId in schedule["apply_to"]:

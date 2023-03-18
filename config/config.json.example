@@ -1,4 +1,8 @@
 {
+    "core": {
+        "restartOnFailure": true,
+        "smartMeterTimeZone": "Europe/Brussels"
+    },
     "healthControl": {
         "enable": true,
         "lifetime_cycles": 4320

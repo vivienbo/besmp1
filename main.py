@@ -12,6 +12,7 @@ from besmreader.helper import ThreadHelper
 import besmreader.configuration as besmConfig
 
 logger = logging.getLogger("besm")
+restartOnFailure = True
 
 """
     Setup to stop the program properly using CTRL+C
@@ -29,7 +30,7 @@ signal.signal(signal.SIGINT, beSMSignalHandler)
 """
     Main program loop, launching and controlling threads execution
 """
-while (not stopProgramEvent.is_set()):
+while ((not stopProgramEvent.is_set()) and restartOnFailure):
     besmConfig.LoggerConfigurator.loadConfiguration(os.path.join(os.getcwd(), "config", "logger_config.json"))
     logger.info('Reading P1 Configuration')
     
@@ -39,6 +40,7 @@ while (not stopProgramEvent.is_set()):
     while (not configLoaded):
         try:
             globalConfiguration = besmConfig.P1Configuration(os.path.join(os.getcwd(), "config", "config.json"))
+            restartOnFailure = globalConfiguration.restartOnFailure
             configLoaded = True
         except Exception as exceptionMet:
             logger.error("Configuration could not be loaded: ", exceptionMet)
@@ -61,7 +63,7 @@ while (not stopProgramEvent.is_set()):
         readerThread
     ])
 
-    if (globalConfiguration.isHealthControlEnabled()):
+    if (globalConfiguration.healthControlEnabled):
         threadsDeque.appendleft(besmThreads.HealthControllerThread(sharedStopEvent, globalConfiguration))
 
     threadsList = list(threadsDeque)
@@ -84,4 +86,4 @@ while (not stopProgramEvent.is_set()):
     logger.info('Closing processors')
     globalConfiguration.closeProcessors()
 
-    time.sleep(globalConfiguration.getTimeoutCycleLength())
+    time.sleep(globalConfiguration.timeoutCycleLength)

@@ -32,14 +32,13 @@ class ReadFromCOMPortThread(Thread, LoggedClass):
         
         super().logger.info('Starting')
         try:
-            serialConfig = self.globalConfiguration.getCOMPortConfig()
-            self.comPort = serial.Serial(**serialConfig)
+            self.comPort = serial.Serial(**self.globalConfiguration.serialPortConfig)
             while (not self.stopReadingEvent.is_set()):
                 rawLine = self.comPort.readline()
                 self.rawDataQueue.put(rawLine)
         except Exception as exceptionMet:
-            super().logger.error('Exception while reading from serial: %s', type(exceptionMet))
-            super().logger.error('%s', exceptionMet)
+            super().logger.error('Exception while reading from serial: %s', str(type(exceptionMet)))
+            super().logger.error('%s', str(exceptionMet))
             self.stopReadingEvent.set()
 
         self.closePort()
@@ -75,19 +74,19 @@ class ParseP1RawDataThread (Thread, LoggedClass):
         super().logger.info('Starting')
         try:
             while (not self.stopReadingEvent.is_set()):
-                rawDataLine = self.rawDataQueue.get(True, self.globalConfiguration.getTimeoutCycleLength())
+                rawDataLine = self.rawDataQueue.get(True, self.globalConfiguration.timeoutCycleLength)
                 if (len(rawDataLine) > 2):
                     cleanDataLine = str(rawDataLine).rstrip()
                     if (ParseP1RawDataThread.isObjectStart(cleanDataLine)):
                         self.currentSequence = P1Sequence(cleanDataLine, self.globalConfiguration)
                     elif (ParseP1RawDataThread.isObjectEnd(cleanDataLine)):
-                        self.currentSequence.setSignature(cleanDataLine)
+                        self.currentSequence.packetSignature = cleanDataLine
                         self.p1SequenceQueue.put(self.currentSequence)
                     else:
                         self.currentSequence.addInformationFromDataLine(cleanDataLine)
         except Exception as exceptionMet:
-            super().logger.error('Exception while parsing raw data: %s' + type(exceptionMet))
-            super().logger.error('%s', exceptionMet)
+            super().logger.error('Exception while parsing raw data: %s', str(type(exceptionMet)))
+            super().logger.error('%s', str(exceptionMet))
             self.stopReadingEvent.set()
         
         super().logger.info('Stopped')
@@ -121,12 +120,12 @@ class ProcessP1SequencesThread(Thread, LoggedClass):
 
         try:
             while (not self.stopReadingEvent.is_set()):
-                p1Sequence = self.p1SequenceQueue.get(True, self.globalConfiguration.getTimeoutCycleLength())
+                p1Sequence = self.p1SequenceQueue.get(True, self.globalConfiguration.timeoutCycleLength)
                 if (p1Sequence is not None):
-                    self.globalConfiguration.getScheduler().processP1(p1Sequence)
+                    self.globalConfiguration.scheduler.processP1(p1Sequence)
         except Exception as exceptionMet:
-            super().logger.error('Exception processing sequences: %s' + str(type(exceptionMet)))
-            super().logger.error('%s', exceptionMet)
+            super().logger.error('Exception processing sequences: %s', str(type(exceptionMet)))
+            super().logger.error('%s', str(exceptionMet))
             self.stopReadingEvent.set()
         
         super().logger.info('Stopped')
@@ -146,15 +145,15 @@ class HealthControllerThread (Thread, LoggedClass):
 
         self.daemon = True
         # Todo make counter configurable
-        self.counter = configuration.getHealthControlMaxLifetimeCycles()
+        self.counter = configuration.healthControlMaxLifetimeCycles
 
     
     def run(self) -> None:
         super().logger.info("Starting")
-        super().logger.warning("Will restart all threads in %d seconds", self.counter * self.globalConfiguration.getTimeoutCycleLength())
+        super().logger.warning("Will restart all threads in %d seconds", self.counter * self.globalConfiguration.timeoutCycleLength)
         while (not self.stopReading.is_set()) and (self.counter >= 0):
             self.counter -= 1
-            time.sleep(self.globalConfiguration.getTimeoutCycleLength())
+            time.sleep(self.globalConfiguration.timeoutCycleLength)
 
         if (self.counter <= 0):
             super().logger.warning("Attempting to stop all threads now...")
