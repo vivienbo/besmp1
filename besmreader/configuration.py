@@ -2,6 +2,8 @@ from croniter import croniter
 from tzlocal import get_localzone
 from pytz import timezone
 
+import logging
+import logging.config
 import json
 import os
 from datetime import datetime
@@ -16,7 +18,7 @@ class P1Configuration:
     """
 
     def __init__(self, configFileName: str):
-        configFile = open(os.path.join(os.path.dirname(__file__), configFileName))
+        configFile = open(configFileName)
         self.configData = json.load(configFile)
         configFile.close()
 
@@ -90,3 +92,12 @@ class P1Configuration:
         if (self.isHealthControlEnabled):
             return self.configData["healthControl"]["lifetime_cycles"]
         return 2160
+
+class LoggerConfigurator:
+
+    @staticmethod
+    def loadConfiguration(logConfigFileName: str):
+        configFile = open(logConfigFileName)
+        logConfigData = json.load(configFile)
+        configFile.close()
+        logging.config.dictConfig(logConfigData)

@@ -6,8 +6,9 @@ import re
 import time
 
 from .sequence import P1Sequence
+from .helper import LoggedClass
 
-class ReadFromCOMPortThread(Thread):
+class ReadFromCOMPortThread(Thread, LoggedClass):
 
     """
         A Thread which opens COM Port using PySerial and continuously read datalines until:
@@ -19,6 +20,7 @@ class ReadFromCOMPortThread(Thread):
     """
 
     def __init__(self, rawDataQueue: Queue, stopReadingEvent: Event, configuration) -> None:
+        LoggedClass.__init__(self)
         Thread.__init__(self)
         self.rawDataQueue = rawDataQueue
         self.stopReadingEvent = stopReadingEvent
@@ -27,7 +29,8 @@ class ReadFromCOMPortThread(Thread):
         self.globalConfiguration = configuration
     
     def run(self) -> None:
-        print('ReadFromComPortThread :: Starting...')
+        
+        super().logger.info('Starting')
         try:
             serialConfig = self.globalConfiguration.getCOMPortConfig()
             self.comPort = serial.Serial(**serialConfig)
@@ -35,21 +38,22 @@ class ReadFromCOMPortThread(Thread):
                 rawLine = self.comPort.readline()
                 self.rawDataQueue.put(rawLine)
         except Exception as exceptionMet:
-            print('ReadFromComPortThread :: Exception met :: ' + str(type(exceptionMet)))
-            print(exceptionMet)
+            super().logger.error('Exception while reading from serial: %s', type(exceptionMet))
+            super().logger.error('%s', exceptionMet)
             self.stopReadingEvent.set()
 
         self.closePort()
-        print('ReadFromComPortThread :: Stopped')
+        super().logger.info('Stopped')
     
     def closePort(self) -> None:
         if (self.comPort is not None):
             try: 
+                super().logger.info('Closing Serial Port')
                 self.comPort.close()
             except Exception:
                 pass
 
-class ParseP1RawDataThread (Thread):
+class ParseP1RawDataThread (Thread, LoggedClass):
 
     """
         A Thread which interprets the rawDataLines from rawDataQueue to build P1 Sequence objects
@@ -57,6 +61,7 @@ class ParseP1RawDataThread (Thread):
     """
 
     def __init__(self, rawDataQueue: Queue, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration) -> None:
+        LoggedClass.__init__(self)
         Thread.__init__(self)
         self.rawDataQueue = rawDataQueue
         self.p1SequenceQueue = p1SequenceQueue
@@ -67,33 +72,35 @@ class ParseP1RawDataThread (Thread):
         self.daemon = True
     
     def run(self) -> None:
-        print('ParseP1RawDataThread :: Starting...')
+        super().logger.info('Starting')
         try:
             while (not self.stopReadingEvent.is_set()):
                 rawDataLine = self.rawDataQueue.get(True, self.globalConfiguration.getTimeoutCycleLength())
                 if (len(rawDataLine) > 2):
                     cleanDataLine = str(rawDataLine).rstrip()
-                    if (self.isObjectStart(cleanDataLine)):
+                    if (ParseP1RawDataThread.isObjectStart(cleanDataLine)):
                         self.currentSequence = P1Sequence(cleanDataLine, self.globalConfiguration)
-                    elif (self.isObjectEnd(cleanDataLine)):
+                    elif (ParseP1RawDataThread.isObjectEnd(cleanDataLine)):
                         self.currentSequence.setSignature(cleanDataLine)
                         self.p1SequenceQueue.put(self.currentSequence)
                     else:
                         self.currentSequence.addInformationFromDataLine(cleanDataLine)
         except Exception as exceptionMet:
-            print('ParseP1RawDataThread :: Exception met :: ' + str(type(exceptionMet)))
-            print(exceptionMet)
+            super().logger.error('Exception while parsing raw data: %s' + type(exceptionMet))
+            super().logger.error('%s', exceptionMet)
             self.stopReadingEvent.set()
         
-        print('ParseP1RawDataThread :: Stopped')
+        super().logger.info('Stopped')
 
-    def isObjectStart(self, data) -> bool:
+    @staticmethod
+    def isObjectStart(data) -> bool:
         return len(re.findall(r'/\w{4}\\', data)) != 0
     
-    def isObjectEnd(self, data) -> bool:
+    @staticmethod
+    def isObjectEnd(data) -> bool:
         return len(re.findall(r'![0-9A-F]{4}', data)) != 0
 
-class ProcessP1SequencesThread(Thread):
+class ProcessP1SequencesThread(Thread, LoggedClass):
     
     """
         A Thred which gets P1Sequence from the p1SequenceQueue and does calculations and processing
@@ -101,6 +108,7 @@ class ProcessP1SequencesThread(Thread):
     """
 
     def __init__(self, p1SequenceQueue: Queue, stopReadingEvent: Event, configuration) -> None:
+        LoggedClass.__init__(self)
         Thread.__init__(self)
         self.p1SequenceQueue = p1SequenceQueue
         self.stopReadingEvent = stopReadingEvent
@@ -109,7 +117,7 @@ class ProcessP1SequencesThread(Thread):
         self.globalConfiguration = configuration
     
     def run(self) -> None:
-        print('ProcessP1Sequences :: Starting...')
+        super().logger.info('Starting...')
 
         try:
             while (not self.stopReadingEvent.is_set()):
@@ -117,13 +125,13 @@ class ProcessP1SequencesThread(Thread):
                 if (p1Sequence is not None):
                     self.globalConfiguration.getScheduler().processP1(p1Sequence)
         except Exception as exceptionMet:
-            print('ProcessP1SequencesThread :: Exception met :: ' + str(type(exceptionMet)))
-            print(exceptionMet)
+            super().logger.error('Exception processing sequences: %s' + str(type(exceptionMet)))
+            super().logger.error('%s', exceptionMet)
             self.stopReadingEvent.set()
         
-        print('ProcessP1Sequences :: Stopped')
+        super().logger.info('Stopped')
 
-class HealthControllerThread (Thread):
+class HealthControllerThread (Thread, LoggedClass):
 
     """
         A Thread which stops all other threads (by setting the stopReadingEvent) after a certain period of time.
@@ -131,6 +139,7 @@ class HealthControllerThread (Thread):
     """
 
     def __init__(self, stopReadingEvent: Event, configuration) -> None:
+        LoggedClass.__init__(self)
         Thread.__init__(self)
         self.stopReading = stopReadingEvent
         self.globalConfiguration = configuration
@@ -141,36 +150,14 @@ class HealthControllerThread (Thread):
 
     
     def run(self) -> None:
-        print("HealthControllerThread :: starting, will stop all threads in ", self.counter * self.globalConfiguration.getCOMPortConfig()["timeout"], ' seconds')
+        super().logger.info("Starting")
+        super().logger.warning("Will restart all threads in %d seconds", self.counter * self.globalConfiguration.getTimeoutCycleLength())
         while (not self.stopReading.is_set()) and (self.counter >= 0):
             self.counter -= 1
             time.sleep(self.globalConfiguration.getTimeoutCycleLength())
 
         if (self.counter <= 0):
-            print("HealthControllerThread :: Trying to stop all threads")
+            super().logger.warning("Attempting to stop all threads now...")
             self.stopReading.set()
         
-        print('HealthControllerThread :: Stopped')
-
-class ThreadHelper:
-
-    def __init__(self) -> None:
-        pass
-
-    @staticmethod
-    def startAllThreads(*threads: Thread) -> None:
-        for thisThread in threads:
-            thisThread.start()
-
-    @staticmethod
-    def checkAllThreadsAreAlive(*threads: Thread) -> bool:
-        allThreadsAreAlive = True
-        for thisThread in threads:
-            thisThread.join(0.1)
-            allThreadsAreAlive = allThreadsAreAlive and thisThread.is_alive()
-        return allThreadsAreAlive
-
-    @staticmethod
-    def waitForAllThreadsToFinish(*threads: Thread) -> None:
-        for thisThread in threads:
-            thisThread.join()
+        super().logger.info('Stopped')

@@ -1,14 +1,17 @@
 from collections import deque
 from queue import Queue
-from threading import Event, Thread
+from threading import Event
+import logging
 import time
 import os
 import signal
 
 import besmreader.threads as besmThreads
-from besmreader.threads import ThreadHelper
+from besmreader.helper import ThreadHelper
 
 import besmreader.configuration as besmConfig
+
+logger = logging.getLogger("besm")
 
 """
     Setup to stop the program properly using CTRL+C
@@ -17,7 +20,7 @@ stopProgramEvent = Event()
 sharedStopEvent = Event()
 
 def beSMSignalHandler(sigNum, Frame):
-    print("Stopping the program when all threads are finished...", flush=True)
+    logger.info("Stopping the program when all threads are finished...")
     stopProgramEvent.set()
     sharedStopEvent.set()
 
@@ -27,7 +30,9 @@ signal.signal(signal.SIGINT, beSMSignalHandler)
     Main program loop, launching and controlling threads execution
 """
 while (not stopProgramEvent.is_set()):
-    print('Reading P1 Configuration')
+    besmConfig.LoggerConfigurator.loadConfiguration(os.path.join(os.getcwd(), "config", "logger_config.json"))
+    logger.info('Reading P1 Configuration')
+    
     globalConfiguration = None
     configLoaded = False
 
@@ -36,15 +41,15 @@ while (not stopProgramEvent.is_set()):
             globalConfiguration = besmConfig.P1Configuration(os.path.join(os.getcwd(), "config", "config.json"))
             configLoaded = True
         except Exception as exceptionMet:
-            print("Configuration could not be loaded: ", exceptionMet)
+            logger.error("Configuration could not be loaded: ", exceptionMet)
             time.sleep(5)
 
     # Create a shared event to stop all threads
-    print('Creating Shared Event Controller')
+    logger.info('Creating Shared Event Controller')
     sharedStopEvent = Event()
 
     # Create the shared queues
-    print('Creating Shared Queues')
+    logger.info('Creating Shared Queues')
     rawQueue = Queue()
     p1SequenceQueue = Queue()
 
@@ -70,13 +75,13 @@ while (not stopProgramEvent.is_set()):
         
         time.sleep(20)
 
-    print('Waiting for threads to terminate...')
+    logger.warning('Waiting for threads to terminate...')
     
     readerThread.closePort()
     ThreadHelper.waitForAllThreadsToFinish(*threadsList)
-    print('All Threads terminated, relaunching...')
+    logger.warning('All Threads terminated, relaunching...')
 
-    print('Closing processors')
+    logger.info('Closing processors')
     globalConfiguration.closeProcessors()
 
     time.sleep(globalConfiguration.getTimeoutCycleLength())

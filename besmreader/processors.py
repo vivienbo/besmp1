@@ -1,5 +1,6 @@
 from paho.mqtt import client as paho
 
+from .helper import LoggedClass
 import ssl
 import os
 
@@ -40,7 +41,7 @@ class PrintP1Processor(P1Processor):
     def closeProcessor(self):
         print("--- end processor ---")
 
-class MQTTP1Processor(P1Processor):
+class MQTTP1Processor(P1Processor, LoggedClass):
 
     """
         A P1 Port Information processor that sends data to MQTT
@@ -49,9 +50,9 @@ class MQTTP1Processor(P1Processor):
     @staticmethod
     def on_connect(client: paho.Client, userdata, flags, rc):
         if (rc==0):
-            print("Connected successfully to MQTT")
+            super().logger.info("MQTT: Connected successfully")
         else:
-            print("Bad connection Returned code rc=", rc)
+            super().logger.error("MQTT: Bad connection Returned code rc=", rc)
 
     def __init__(self, processorConfig: str):
         super().__init__(processorConfig)
