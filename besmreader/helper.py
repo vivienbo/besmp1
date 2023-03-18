@@ -3,12 +3,17 @@ from threading import Thread
 
 class LoggedClass:
 
+    """
+        A class with a logger property which allows to create new loggers automatically
+        based on the package root name ("besm.") and the name of the class.
+    """
+
     def __init__(self) -> None:
-        self._logger = logging.getLogger("besm." + self.__class__.__name__)
+        self.__logger = logging.getLogger("besm." + self.__class__.__name__)
 
     @property
-    def logger(self):
-        return self._logger
+    def logger(self) -> logging.Logger:
+        return self.__logger
 
 class ThreadHelper:
 
