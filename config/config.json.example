@@ -44,6 +44,22 @@
                 "1-0:32.7.0": "smartmeter/electricity/instant/L1/tension"                
             }
         },
+        "loggerInfoMode": {
+            "type": "logger",
+            "logLevel": "INFO",
+            "topics": {
+                "1-0:1.8.0": "smartmeter/electricity/reading/consumption/total",
+                "1-0:1.8.1": "smartmeter/electricity/reading/consumption/day_tariff",
+                "1-0:1.8.2": "smartmeter/electricity/reading/consumption/night_tariff",
+                "1-0:2.8.0": "smartmeter/electricity/reading/injection/total",
+                "1-0:2.8.1": "smartmeter/electricity/reading/injection/day_tariff",
+                "1-0:2.8.2": "smartmeter/electricity/reading/injection/night_tariff",
+                "1-0:21.7.0": "smartmeter/electricity/instant/L1/power/consumption",
+                "1-0:22.7.0": "smartmeter/electricity/instant/L1/power/injection",
+                "1-0:31.7.0": "smartmeter/electricity/instant/L1/intensity",
+                "1-0:32.7.0": "smartmeter/electricity/instant/L1/tension"                
+            }
+        },
         "mqttShirka": {
             "type": "mqtt",
             "broker": "your.mqtt.domain.name.or.ip",
@@ -95,6 +111,14 @@
             "mode": "current",
             "apply_to": [
                 "1-0:1.8.0"
+            ]
+        },
+        {
+            "cron_format": "0/10 * * * *",
+            "processor": "loggerInfoMode",
+            "mode": "current",
+            "apply_to": [
+                "1-0:21.7.0"
             ]
         }
     ]
