@@ -64,6 +64,11 @@
             "type": "mqtt",
             "broker": "your.mqtt.domain.name.or.ip",
             "tcpPort": 8883,
+            "tls": {
+                "useTLS": true,
+                "setTLSInsecure": true,
+                "rootCAFileName": "config.crt"
+            },
             "username": "mqtt.username",
             "password": "mqtt.password",
             "topics": {

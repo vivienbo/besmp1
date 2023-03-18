@@ -63,10 +63,13 @@ sequenceDiagram
 
 ## TODO
 
-* ~~Make the HealthControllerThread counter configurable via the JSON config file~~
 * Document the configuration file format + JSON Schema Validation
-* MQTT only supports SSL, requires a certificate called "readp1.crt" in the same folder as main.py and is in the end not checked (security concern)
+* Nice to have :: Windows Service Wrapper? Linux Service Wrapper?
+
+### Completed
+
+* ~~Make the HealthControllerThread counter configurable via the JSON config file~~
+* ~~MQTT only supports SSL, requires a certificate called "readp1.crt" in the same folder as main.py and is in the end not checked (security concern)~~
 * ~~Timezone is forced to UTC for computer~~
 * ~~Timezone is set to Europe/Brussels for meter (well, it's for Belgian metters right?)~~
 * ~~Implement a logger instead of printing to console~~
-* Nice to have :: Windows Service Wrapper? Linux Service Wrapper?

@@ -91,26 +91,34 @@ class MQTTP1Processor (P1Processor, LoggedClass):
         P1Processor.__init__(self, processorConfig)
         LoggedClass.__init__(self)
 
-        self.mqttClient = paho.Client(client_id="belgian-smartmeter-p1-to-mqtt")
-        self.mqttClient.on_connect = MQTTP1Processor.on_connect
+        self._mqttClient = paho.Client(client_id="belgian-smartmeter-p1-to-mqtt")
+        self._mqttClient.on_connect = MQTTP1Processor.on_connect
         
-        crtFileName = os.path.abspath(os.path.join(os.getcwd(), 'config', 'config.crt'))
-        self.mqttClient.tls_set(ca_certs=crtFileName, tls_version=ssl.PROTOCOL_TLSv1_2, cert_reqs=ssl.CERT_NONE)
-        self.mqttClient.tls_insecure_set(True)
+        if (('tls' in self._processorConfig) and (self._processorConfig['tls']['useTLS'])):
+            rootCAFileName = 'config.crt'
+            
+            if ('rootCAFileName' in self._processorConfig['tls']):
+                rootCAFileName = self._processorConfig['tls']['rootCAFileName']
+            
+            rootCAFilePath = os.path.abspath(os.path.join(os.getcwd(), 'config', rootCAFileName))
+            self._mqttClient.tls_set(ca_certs=rootCAFilePath, tls_version=ssl.PROTOCOL_TLSv1_2, cert_reqs=ssl.CERT_NONE)
+            
+            if (('setTLSInsecure' in self._processorConfig['tls']) and (self._processorConfig['tls']['setTLSInsecure'])):
+                self._mqttClient.tls_insecure_set(True)
         
-        self.mqttClient.username_pw_set(self._processorConfig['username'], self._processorConfig['password'])
+        self._mqttClient.username_pw_set(self._processorConfig['username'], self._processorConfig['password'])
         self.connectMQTT()
 
     def connectMQTT(self):
-        self.mqttClient.connect(self._processorConfig['broker'], self._processorConfig['tcpPort'], 60)    
+        self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['tcpPort'], 60)    
 
     def processInformation(self, processLabel: str, processValue: str):
-        if (not self.mqttClient.is_connected):
+        if (not self._mqttClient.is_connected):
             self.connectMQTT()
-        self.mqttClient.publish(topic=processLabel, payload=str(processValue))
+        self._mqttClient.publish(topic=processLabel, payload=str(processValue))
 
     def closeProcessor(self):
-        self.mqttClient.disconnect()
+        self._mqttClient.disconnect()
     
     @staticmethod
     def getConfigurationName() -> str:
