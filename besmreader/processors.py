@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from paho.mqtt import client as paho
 
 from .helper import LoggedClass
@@ -20,10 +21,17 @@ class P1Processor:
             if (p1Sequence.hasInformation(label)):
                 self.processInformation(self.processorConfig["topics"][label], p1Sequence.getInformationValue(label))
     
+    @abstractmethod
     def processInformation(self, processLabel: str, processValue: str):
         pass
 
+    @abstractmethod
     def closeProcessor(self):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def getConfigurationName() -> str:
         pass
 
 class PrintP1Processor(P1Processor):
@@ -40,6 +48,10 @@ class PrintP1Processor(P1Processor):
 
     def closeProcessor(self):
         print("--- end processor ---")
+    
+    @staticmethod
+    def getConfigurationName() -> str:
+        return "print"
 
 class MQTTP1Processor(P1Processor, LoggedClass):
 
@@ -76,15 +88,33 @@ class MQTTP1Processor(P1Processor, LoggedClass):
 
     def closeProcessor(self):
         self.mqttClient.disconnect()
+    
+    @staticmethod
+    def getConfigurationName() -> str:
+        return "mqtt"
 
 class P1ProcessorFactory:
 
     """
         A factory for creating P1 processors from a configuration.
     """
+    _processorClassList = [MQTTP1Processor, PrintP1Processor]
+    _procesorDictionary = None
 
-    def createProcessor(processorConfig: dict):
-        if (processorConfig["type"] == "print"):
-            return PrintP1Processor(processorConfig)
-        elif (processorConfig["type"] == "mqtt"):
-            return MQTTP1Processor(processorConfig)
+    @classmethod
+    def getProcessorDictionary(cls) -> dict:
+        if (cls._procesorDictionary is None):
+            cls._procesorDictionary = dict()
+            for aClass in cls._processorClassList:
+                cls._procesorDictionary[aClass.getConfigurationName()] = aClass
+
+        return cls._procesorDictionary
+
+    @classmethod
+    def createProcessor(cls, processorConfig: dict):
+        thisMap = cls.getProcessorDictionary()
+        if (processorConfig["type"] in thisMap):
+            return thisMap[processorConfig["type"]](processorConfig)
+        
+        # TODO Exception
+        return None
