@@ -78,6 +78,8 @@ Example for a `p1Transform` block containing only the `1-0:1.8.0` definition:
 
 **Mandatory section**. TODO.
 
+[Click here if you need more information on the OBIS format and example of Belgian SmartMeter output](https://github.com/vivienbo/belgian-smartmeter-p1-to-mqtt/tree/main/docs/obis.md)
+
 ### `scheduling` Section
 
 **Mandatory section**. TODO.
