@@ -5,9 +5,9 @@
     },
     "healthControl": {
         "enable": true,
-        "lifetime_cycles": 4320
+        "lifetimeCycles": 4320
     },
-    "COMPortConfig": {
+    "SerialPortConfig": {
         "port": "COM4",
         "baudrate": 115200,
         "timeout": 5
@@ -87,10 +87,10 @@
     },
     "scheduling": [
         {
-            "cron_format": "* * * * *",
+            "cronFormat": "* * * * *",
             "processor": "mqttShirka",
             "mode": "current",
-            "apply_to": [
+            "applyTo": [
                 "1-0:1.8.0",
                 "1-0:1.8.1",
                 "1-0:1.8.2",
@@ -100,10 +100,10 @@
             ]
         },
         {
-            "cron_format": "* * * * * 0/20",
+            "cronFormat": "* * * * * 0/20",
             "processor": "mqttShirka",
             "mode": "current",
-            "apply_to": [
+            "applyTo": [
                 "1-0:21.7.0",
                 "1-0:22.7.0",
                 "1-0:31.7.0",
@@ -111,18 +111,18 @@
             ]
         },
         {
-            "cron_format": "0/10 * * * *",
+            "cronFormat": "0/10 * * * *",
             "processor": "printMode",
             "mode": "current",
-            "apply_to": [
+            "applyTo": [
                 "1-0:1.8.0"
             ]
         },
         {
-            "cron_format": "0/10 * * * *",
+            "cronFormat": "0/10 * * * *",
             "processor": "loggerInfoMode",
             "mode": "current",
-            "apply_to": [
+            "applyTo": [
                 "1-0:21.7.0"
             ]
         }

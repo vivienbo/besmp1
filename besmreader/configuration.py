@@ -47,12 +47,12 @@ class P1Configuration:
             localTimeZone=get_localzone()
             startDate = datetime.now(localTimeZone)
 
-            schedule["cron"] = croniter(schedule["cron_format"], startDate)
+            schedule["cron"] = croniter(schedule["cronFormat"], startDate)
             schedule["cron_next_trigger"] = schedule["cron"].get_next(datetime)
 
             if (schedule["mode"] == "average"):
                 schedule["history"] = dict()
-                for obisId in schedule["apply_to"]:
+                for obisId in schedule["applyTo"]:
                     schedule["history"][obisId] = list()
         
         self._scheduler = P1Scheduler(self)
@@ -64,12 +64,12 @@ class P1Configuration:
 
     def __init_serialPort(self) -> None:
         # if no timeout is set, default value is 5 seconds
-        if (not "timeout" in self._configData["COMPortConfig"]):
-            self._configData["COMPortConfig"]["timeout"] = 5
+        if (not "timeout" in self._configData["SerialPortConfig"]):
+            self._configData["SerialPortConfig"]["timeout"] = 5
         
         # since SmartMeter sends one packet per second, timeout should not be lower than 2 seconds
-        if (self._configData["COMPortConfig"]["timeout"] < 2):
-            self._configData["COMPortConfig"] = 2
+        if (self._configData["SerialPortConfig"]["timeout"] < 2):
+            self._configData["SerialPortConfig"] = 2
 
     def __init_configSchemaCheck(self) -> None:
         # Set the Timezone information
@@ -86,7 +86,7 @@ class P1Configuration:
 
     @property
     def serialPortConfig(self) -> dict:
-        return self._configData["COMPortConfig"]
+        return self._configData["SerialPortConfig"]
     
     @property
     def timeoutCycleLength(self) -> int:
@@ -109,7 +109,7 @@ class P1Configuration:
         if (self._filters is None):
             uniqueFilters = set()
             for schedule in self._configData["scheduling"]:
-                uniqueFilters.update(schedule["apply_to"])
+                uniqueFilters.update(schedule["applyTo"])
             self._filters = uniqueFilters
         return self._filters
 
@@ -133,7 +133,7 @@ class P1Configuration:
     @property
     def healthControlMaxLifetimeCycles(self) -> int:
         if (self.healthControlEnabled):
-            return self._configData["healthControl"]["lifetime_cycles"]
+            return self._configData["healthControl"]["lifetimeCycles"]
         # default is 2160 cycles
         return 2160        
 

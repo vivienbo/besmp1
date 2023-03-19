@@ -18,15 +18,15 @@ class P1Scheduler:
                 self.processor = self.__config.getProcessor(schedule["processor"])
 
                 if (schedule["mode"] == "average"):
-                    for obisId in schedule["apply_to"]:
+                    for obisId in schedule["applyTo"]:
                         if (len(schedule["history"][obisId])>0):
                             p1Sequence.addInformation(obisId, round(mean(schedule["history"][obisId]),3), p1Sequence.getInformationUnit(obisId))
                         schedule["history"][obisId].clear()
 
-                self.processor.processSequence(p1Sequence, schedule["apply_to"])
+                self.processor.processSequence(p1Sequence, schedule["applyTo"])
                 schedule["cron_next_trigger"] = schedule["cron"].get_next(datetime)
             else:
                 if (schedule["mode"] == "average"):
-                    for obisId in schedule["apply_to"]:
+                    for obisId in schedule["applyTo"]:
                         if (p1Sequence.hasInformation(obisId)):
                             schedule["history"][obisId].append(p1Sequence.getInformationValue(obisId))

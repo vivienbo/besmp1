@@ -39,6 +39,7 @@ The following packages are required. They can all be installed using pip:
     pip install tzlocal
     pip install croniter
     pip install pyserial
+    pip install jsonschema
 
 ### TODO
 
