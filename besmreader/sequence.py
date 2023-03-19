@@ -17,7 +17,7 @@ class P1Sequence:
         self._packetSignature = None
         self._informations = dict()
         self._systemTimeZoneMessageTime = None
-        self._smartMeterTimezone = timezone('Europe/Brussels')
+        self._smartMeterTimezone = configuration.smartMeterTimeZone
         self._systemTimeZone = get_localzone()
         self._config = configuration
 
