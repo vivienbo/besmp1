@@ -35,16 +35,9 @@ while ((not stopProgramEvent.is_set()) and restartOnFailure):
     logger.info('Reading P1 Configuration')
     
     globalConfiguration = None
-    configLoaded = False
 
-    while (not configLoaded):
-        try:
-            globalConfiguration = besmConfig.P1Configuration("config.json")
-            restartOnFailure = globalConfiguration.restartOnFailure
-            configLoaded = True
-        except Exception as exceptionMet:
-            logger.error("Configuration could not be loaded: ", exceptionMet)
-            time.sleep(5)
+    globalConfiguration = besmConfig.P1Configuration("config.json")
+    restartOnFailure = globalConfiguration.restartOnFailure
 
     # Create a shared event to stop all threads
     logger.info('Creating Shared Event Controller')
@@ -75,7 +68,7 @@ while ((not stopProgramEvent.is_set()) and restartOnFailure):
         if(not ThreadHelper.checkAllThreadsAreAlive(*threadsList)):
             sharedStopEvent.set()
         
-        time.sleep(20)
+        time.sleep(10)
 
     logger.warning('Waiting for threads to terminate...')
     
@@ -86,4 +79,5 @@ while ((not stopProgramEvent.is_set()) and restartOnFailure):
     logger.info('Closing processors')
     globalConfiguration.closeProcessors()
 
-    time.sleep(globalConfiguration.timeoutCycleLength)
+    if (not stopProgramEvent.is_set()): 
+        time.sleep(globalConfiguration.timeoutCycleLength)
