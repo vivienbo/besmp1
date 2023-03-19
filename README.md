@@ -66,7 +66,7 @@ flowchart LR
     HASRV(OpenHAB home automation)
     TSDB[(Influx TimeSeries Database)]
 
-    SM-->|Slimme meter kabel<br/>P1 naar USB<br/>(RS-422)|NRSRV
+    SM-->|Slimme meter kabel<br/>P1 naar USB<br/>RS-422|NRSRV
     NRSRV-->|Push using<br/>Paho MQTT|MQTTSRV
     HASRV-->|Pull using OpenHAB<br/>MQTT Plugin|MQTTSRV
     HASRV-->|OpenHAB InfluxDB<br/>Plugin|TSDB
