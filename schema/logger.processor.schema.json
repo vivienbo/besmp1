@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Schema for LoggerP1Processor",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": ["logger"]
+        },
+        "logLevel": {
+            "type": "string",
+            "enum": ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"]
+        },
+        "topics": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "type",
+        "topics"
+    ],
+    "additionalProperties": false
+}

@@ -1,5 +1,7 @@
 from abc import abstractmethod
 from paho.mqtt import client as paho
+from jsonschema import validate as jsvalidate
+import json
 
 from .helper import LoggedClass
 import logging
@@ -14,20 +16,36 @@ class P1Processor:
         Interface for all P1 Port information processors
     """
 
-    def __init__(self, processorConfig: dict):
+    def __init__(self, processorConfig: dict) -> None:
         self._processorConfig = processorConfig
+        self.__init__validateSchema()
 
-    def processSequence(self, p1Sequence: P1Sequence, applyTo: dict):
+        if (len(self._processorConfig["topics"]) < 1):
+            raise P1ConfigurationError('Configuration error: ' + self.__class__.__name__ + ' has no topics defined') # type: ignore
+
+    def __init__validateSchema(self) -> None:
+        schemaFileName = os.path.join(os.getcwd(), "schema", self.getConfigurationName() + '.processor.schema.json')
+        jsonSchema = None
+        
+        if (os.path.exists(schemaFileName)):
+            schemaFile = open(schemaFileName)
+            jsonSchema = json.load(schemaFile)
+            schemaFile.close()
+            jsvalidate(self._processorConfig, jsonSchema)
+        else:
+            raise P1ConfigurationError('Configuration error: Could not find schema for processor: ' + self.getConfigurationName()) # type: ignore
+
+    def processSequence(self, p1Sequence: P1Sequence, applyTo: dict) -> None:
         for label in applyTo:
-            if (p1Sequence.hasInformation(label)):
+            if ((p1Sequence.hasInformation(label)) and (label in self._processorConfig["topics"])):
                 self.processInformation(self._processorConfig["topics"][label], p1Sequence.getInformationValue(label))
-    
+
     @abstractmethod
-    def processInformation(self, processLabel: str, processValue: str):
+    def processInformation(self, processLabel: str, processValue: str) -> None:
         pass
 
     @abstractmethod
-    def closeProcessor(self):
+    def closeProcessor(self) -> None:
         pass
 
     @staticmethod
@@ -41,13 +59,13 @@ class PrintP1Processor (P1Processor):
         A P1 Port Information processor that prints data to stdout
     """
 
-    def __init__(self, processorConfig: dict):
+    def __init__(self, processorConfig: dict) -> None:
         super().__init__(processorConfig)
 
-    def processInformation(self, processLabel: str, processValue: str):
+    def processInformation(self, processLabel: str, processValue: str) -> None:
         print(processLabel + " = " + str(processValue))
 
-    def closeProcessor(self):
+    def closeProcessor(self) -> None:
         pass
     
     @staticmethod
@@ -56,17 +74,18 @@ class PrintP1Processor (P1Processor):
 
 class LoggerP1Processor (P1Processor, LoggedClass):
 
-    def __init__(self, processorConfig: dict):
-        if (not "logLevel" in processorConfig):
-            processorConfig["logLevel"] = "INFO"
-        self._loggerLevel = logging.__dict__[processorConfig["logLevel"]]
+    def __init__(self, processorConfig: dict) -> None:
         P1Processor.__init__(self, processorConfig)
         LoggedClass.__init__(self)
 
-    def processInformation(self, processLabel: str, processValue: str):
+        if (not "logLevel" in processorConfig):
+            processorConfig["logLevel"] = "INFO"
+        self._loggerLevel = logging.__dict__[processorConfig["logLevel"]]
+
+    def processInformation(self, processLabel: str, processValue: str) -> None:
         super().logger.log(self._loggerLevel, '%s: %s', processLabel, str(processValue))
 
-    def closeProcessor(self):
+    def closeProcessor(self) -> None:
         pass
 
     @staticmethod
@@ -81,13 +100,13 @@ class MQTTP1Processor (P1Processor, LoggedClass):
     """
 
     @staticmethod
-    def on_connect(client: paho.Client, userdata, flags, rc):
+    def on_connect(client: paho.Client, userdata, flags, rc) -> None:
         if (rc==0):
             super().logger.info("MQTT: Connected successfully")
         else:
             super().logger.error("MQTT: Bad connection Returned code rc=", rc)
 
-    def __init__(self, processorConfig: dict):
+    def __init__(self, processorConfig: dict) -> None:
         P1Processor.__init__(self, processorConfig)
         LoggedClass.__init__(self)
 
@@ -109,15 +128,15 @@ class MQTTP1Processor (P1Processor, LoggedClass):
         self._mqttClient.username_pw_set(self._processorConfig['username'], self._processorConfig['password'])
         self.connectMQTT()
 
-    def connectMQTT(self):
+    def connectMQTT(self) -> None:
         self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['tcpPort'], 60)    
 
-    def processInformation(self, processLabel: str, processValue: str):
+    def processInformation(self, processLabel: str, processValue: str) -> None:
         if (not self._mqttClient.is_connected):
             self.connectMQTT()
         self._mqttClient.publish(topic=processLabel, payload=str(processValue))
 
-    def closeProcessor(self):
+    def closeProcessor(self) -> None:
         self._mqttClient.disconnect()
     
     @staticmethod
@@ -142,7 +161,7 @@ class P1ProcessorFactory:
         return cls._procesorDictionary
 
     @classmethod
-    def createProcessor(cls, processorConfig: dict):
+    def createProcessor(cls, processorConfig: dict) -> None:
         thisMap = cls.getProcessorDictionary()
         if (processorConfig["type"] in thisMap):
             return thisMap[processorConfig["type"]](processorConfig)

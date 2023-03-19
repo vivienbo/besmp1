@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Schema for MQTTP1Processor",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": ["mqtt"]
+        },
+        "broker": {
+            "type": "string"
+        },
+        "tcpPort": {
+            "type": "number"
+        },
+        "username": {
+            "type": "string"
+        },
+        "password": {
+            "type": "string"
+        },
+        "tls": {
+            "type": "object",
+            "properties": {
+                "useTLS": {
+                    "type": "boolean"
+                },
+                "setTLSInsecure": {
+                    "type": "boolean"
+                },
+                "rootCAFileName": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "useTLS"
+            ]
+        },
+        "topics": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "type",
+        "broker",
+        "tcpPort",
+        "username",
+        "password",
+        "topics"
+    ],
+    "additionalProperties": false
+}

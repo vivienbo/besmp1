@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Schema for PrintP1Processor",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": ["print"]
+        },
+        "topics": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "type",
+        "topics"
+    ],
+    "additionalProperties": false
+}
