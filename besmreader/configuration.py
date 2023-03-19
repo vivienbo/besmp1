@@ -27,10 +27,13 @@ class P1Configuration:
     """
 
     def __init__(self, configFileName: str) -> None:
-        configFile = open(configFileName)
-        self._configData = json.load(configFile)
-        configFile.close()
-
+        try: 
+            configFile = open(os.path.join(os.getcwd(), "config", configFileName))
+            self._configData = json.load(configFile)
+            configFile.close()
+        except Exception as exceptionMet:
+            raise P1ConfigurationError('Could not load configuration file: ' + str(exceptionMet))
+        
         self._processors = dict()
         self._filters = None
 

@@ -39,7 +39,7 @@ while ((not stopProgramEvent.is_set()) and restartOnFailure):
 
     while (not configLoaded):
         try:
-            globalConfiguration = besmConfig.P1Configuration(os.path.join(os.getcwd(), "config", "config.json"))
+            globalConfiguration = besmConfig.P1Configuration("config.json")
             restartOnFailure = globalConfiguration.restartOnFailure
             configLoaded = True
         except Exception as exceptionMet:
