@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "belgian-smartmeter-p1-to-mqtt Configuration Schema",
+  "type": "object",
+  "properties": {
+    "core": {
+      "type": "object",
+      "properties": {
+        "restartOnFailure": {
+          "type": "boolean"
+        },
+        "smartMeterTimeZone": {
+          "type": "string"
+        }
+      }
+    },
+    "healthControl": {
+      "type": "object",
+      "properties": {
+        "enable": {
+          "type": "boolean"
+        },
+        "lifetimeCycles": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "enable"
+      ]
+    },
+    "SerialPortConfig": {
+      "type": "object",
+      "properties": {
+        "port": {
+          "type": "string"
+        },
+        "baudrate": {
+          "type": "number"
+        },
+        "timeout": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "port",
+        "baudrate"
+      ]
+    },
+    "p1Transform": {
+      "type": "object",
+      "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "string",
+              "enum": ["sum"]
+            },
+            "operands": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "operation",
+            "operands"
+          ]
+      }
+    },
+    "processors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "scheduling": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cronFormat": {
+            "type": "string"
+          },
+          "processor": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "applyTo": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "cronFormat",
+          "processor",
+          "mode",
+          "applyTo"
+        ]
+      }
+    }
+  },
+  "required": [
+    "SerialPortConfig",
+    "processors",
+    "scheduling"
+  ]
+}

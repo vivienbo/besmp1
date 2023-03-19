@@ -1,6 +1,7 @@
 from croniter import croniter
 from tzlocal import get_localzone
 from pytz import timezone
+from jsonschema import validate as jsvalidate
 
 import logging
 import logging.config
@@ -72,13 +73,23 @@ class P1Configuration:
             self._configData["SerialPortConfig"] = 2
 
     def __init_configSchemaCheck(self) -> None:
+        schemaFileName = os.path.join(os.getcwd(), "schema", 'config.schema.json')
+        jsonSchema = None
+        
+        if (os.path.exists(schemaFileName)):
+            schemaFile = open(schemaFileName)
+            jsonSchema = json.load(schemaFile)
+            schemaFile.close()
+            jsvalidate(self._configData, jsonSchema)
+        else:
+            raise P1ConfigurationError('Configuration error: Could not find configuration schema') # type: ignore
+
+        self._configData["core"]["smartMeterTimeZone_pytz"] = get_localzone()
+
         # Set the Timezone information
         if ("core" in self._configData):
             if ("smartMeterTimeZone" in self._configData["core"]):
                 self._configData["core"]["smartMeterTimeZone_pytz"] = timezone(self._configData["core"]["smartMeterTimeZone"])
-        
-        # default is to take the local system timezone
-        self._configData["core"]["smartMeterTimeZone_pytz"] = get_localzone()
 
     def closeProcessors(self) -> None:
         for processorName in self._processors:
@@ -94,6 +105,8 @@ class P1Configuration:
 
     @property
     def p1Transformations(self) -> dict:
+        if (not "p1Transform" in self._configData):
+            return {}
         return self._configData["p1Transform"]
 
     @property
