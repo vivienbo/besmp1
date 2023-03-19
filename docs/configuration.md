@@ -29,11 +29,55 @@
     * Interaction with `restartOnFailure`:
         * if set to `false`, the program ends after `HealthControlThread` stopped all daemon threads.
         * If set to `true`, the program restarts all threads after `HealthControlThread` stopped
-        all daemon threads. Including a new HealthControlThread.
+        all daemon threads. Including a new `HealthControlThread`.
     * Default value if `healthControl` does not exists: `false`
 * `lifetimeCycles` (optional)
     * The number of cycles for which `HealthControlThread` will run until it terminates
     all daemon threads. Each cycle has a duration of `timeout` seconds.
     * Default value is `2160`
 
-### TODO
+### `SerialPortConfig` section
+
+**Mandatory section** with three properties:
+* `port`, `baudrate` and `timeout`: as per [PySerial native port documentation](https://pyserial.readthedocs.io/en/latest/pyserial_api.html#native-ports)
+* if `timeout` isn't set, default value is `5`
+
+### `p1Transform` section
+
+**Optional section** which contains an unlimited number of transformation objects.
+Transformations allows to do basic calculation on OBIS values to create a new OBIS value.
+Objects are composed of:
+
+* `object name` must be in the OBIS Format (eg `1-0:1.8.0`).
+    * If the object name corresponds to an existing object, it replaces this object from
+    the SmartMeter output.
+    * If the object uses result from another transformation, it must be a transformation
+    declared later in the file (avoids infinite loops)
+* `operation` property
+    * `sum` is currently the only supported operation
+* `operands` list
+    * list of the OBIS codes (`string`) which are to be summed. Not that the transformation
+    does **not** check that the units are consistent when doing the `operation`.
+
+Typical use case is for the total consumed kWh index (`1-0:1.8.0`) and total injected kWh index (`1-0:2.8.0`) displayed on the SmartMeter screen but which is no transmitted through the Serial Port.
+
+Example for a `p1Transform` block containing only the `1-0:1.8.0` definition:
+```
+"p1Transform": {
+    "1-0:1.8.0": {
+        "operation": "sum",
+        "operands": [
+            "1-0:1.8.1",
+            "1-0:1.8.2"
+        ]
+    }
+}
+```
+
+### `processors` Section
+
+**Mandatory section**. TODO.
+
+### `scheduling` Section
+
+**Mandatory section**. TODO.

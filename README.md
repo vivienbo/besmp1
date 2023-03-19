@@ -64,12 +64,12 @@ flowchart LR
     NRSRV(Nearby Server with<br/>this python module)
     MQTTSRV(MosQuiTTo Server)
     HASRV(OpenHAB home automation)
-    TSDB(Influx TimeSeries Database)
+    TSDB[(Influx TimeSeries Database)]
 
-    SM-->|Slimme meter kabel<br/>P1 naar USB|NRSRV
-    NRSRV-->|Paho MQTT|MQTTSRV
-    MQTTSRV-->|OpenHAB MQTT Plugin|HASRV
-    HASRV-->|OpenHAB Influx Plugin|TSDB
+    SM-->|Slimme meter kabel<br/>P1 naar USB<br/>(RS-422)|NRSRV
+    NRSRV-->|Push using<br/>Paho MQTT|MQTTSRV
+    HASRV-->|Pull using OpenHAB<br/>MQTT Plugin|MQTTSRV
+    HASRV-->|OpenHAB InfluxDB<br/>Plugin|TSDB
 ```
 
 ## Tested Use Cases
