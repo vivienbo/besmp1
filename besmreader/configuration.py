@@ -65,12 +65,12 @@ class P1Configuration:
 
     def __init_serialPort(self) -> None:
         # if no timeout is set, default value is 5 seconds
-        if (not "timeout" in self._configData["SerialPortConfig"]):
-            self._configData["SerialPortConfig"]["timeout"] = 5
+        if (not "timeout" in self._configData["serialPortConfig"]):
+            self._configData["serialPortConfig"]["timeout"] = 5
         
         # since SmartMeter sends one packet per second, timeout should not be lower than 2 seconds
-        if (self._configData["SerialPortConfig"]["timeout"] < 2):
-            self._configData["SerialPortConfig"] = 2
+        if (self._configData["serialPortConfig"]["timeout"] < 2):
+            self._configData["serialPortConfig"] = 2
 
     def __init_configSchemaCheck(self) -> None:
         schemaFileName = os.path.join(os.getcwd(), "schema", 'config.schema.json')
@@ -97,7 +97,7 @@ class P1Configuration:
 
     @property
     def serialPortConfig(self) -> dict:
-        return self._configData["SerialPortConfig"]
+        return self._configData["serialPortConfig"]
     
     @property
     def timeoutCycleLength(self) -> int:

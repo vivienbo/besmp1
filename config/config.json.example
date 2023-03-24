@@ -7,7 +7,7 @@
         "enable": true,
         "lifetimeCycles": 4320
     },
-    "SerialPortConfig": {
+    "serialPortConfig": {
         "port": "COM4",
         "baudrate": 115200,
         "timeout": 5

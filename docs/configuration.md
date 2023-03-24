@@ -36,7 +36,7 @@
     all daemon threads. Each cycle has a duration of `timeout` seconds.
     * Default value is `2160`
 
-### `SerialPortConfig` section
+### `serialPortConfig` section
 
 **Mandatory section** with three properties:
 * `port`, `baudrate` and `timeout`: as per [PySerial native port documentation](https://pyserial.readthedocs.io/en/latest/pyserial_api.html#native-ports)
@@ -62,7 +62,7 @@ Objects are composed of:
 Typical use case is for the total consumed kWh index (`1-0:1.8.0`) and total injected kWh index (`1-0:2.8.0`) displayed on the SmartMeter screen but which is no transmitted through the Serial Port.
 
 Example for a `p1Transform` block containing only the `1-0:1.8.0` definition:
-```
+```json
 "p1Transform": {
     "1-0:1.8.0": {
         "operation": "sum",
@@ -76,7 +76,36 @@ Example for a `p1Transform` block containing only the `1-0:1.8.0` definition:
 
 ### `processors` Section
 
-**Mandatory section**. TODO.
+**Mandatory section**. Must contain at least one processor otherwise the application will never
+take any action on read values.
+
+#### `print` processor
+
+* `Type` must always be `print`
+* `topics` is a dictionary translating from an OBIS code to a text which
+    will be printed out to the console (`stdout` or equivalent), followed by 
+
+Example:
+```json
+"printMode": {
+    "type": "print",
+    "topics": {
+        "1-0:1.8.1": "Consumed Index - Daytime Tariff",
+        "1-0:1.8.2": "Consumed Index - Nighttime Tariff",
+        "1-0:2.8.0": "smartmeter/electricity/reading/injection/total",
+        "1-0:2.8.1": "smartmeter/electricity/reading/injection/day_tariff",
+        "1-0:2.8.2": "smartmeter/electricity/reading/injection/night_tariff",
+        "1-0:21.7.0": "smartmeter/electricity/instant/L1/power/consumption",
+        "1-0:22.7.0": "smartmeter/electricity/instant/L1/power/injection",
+        "1-0:31.7.0": "smartmeter/electricity/instant/L1/intensity",
+        "1-0:32.7.0": "smartmeter/electricity/instant/L1/tension"                
+    }
+},
+```
+
+#### `logger` processor
+
+#### `mqtt` processor
 
 [Click here if you need more information on the OBIS format and example of Belgian SmartMeter output](https://github.com/vivienbo/belgian-smartmeter-p1-to-mqtt/tree/main/docs/obis.md)
 

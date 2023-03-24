@@ -28,7 +28,7 @@
         "enable"
       ]
     },
-    "SerialPortConfig": {
+    "serialPortConfig": {
       "type": "object",
       "properties": {
         "port": {
@@ -105,7 +105,7 @@
     }
   },
   "required": [
-    "SerialPortConfig",
+    "serialPortConfig",
     "processors",
     "scheduling"
   ]
