@@ -26,6 +26,10 @@ class P1Sequence:
         return self._systemTimeZoneMessageTime
     
     @property
+    def hasTimeinSystemTimezone(self) -> bool:
+        return (self.__setMessageTimeInSystemTimezone is not None)
+
+    @property
     def packetSignature(self) -> str:
         return self._packetSignature
 

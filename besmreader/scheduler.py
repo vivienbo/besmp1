@@ -10,7 +10,10 @@ class P1Scheduler:
         self.__schedules = config.scheduling
         self.__config = config
 
-    def processP1(self, p1Sequence: P1Sequence):
+    def processP1(self, p1Sequence: P1Sequence) -> None:
+        if (p1Sequence.hasTimeinSystemTimezone):
+            return
+        
         p1Sequence.applyTransformations()
 
         for schedule in self.__schedules:
