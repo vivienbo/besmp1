@@ -125,7 +125,16 @@ class MQTTP1Processor (P1Processor, LoggedClass):
             if (('setTLSInsecure' in self._processorConfig['tls']) and (self._processorConfig['tls']['setTLSInsecure'])):
                 self._mqttClient.tls_insecure_set(True)
         
-        self._mqttClient.username_pw_set(self._processorConfig['username'], self._processorConfig['password'])
+        if ('username' in self._processorConfig):
+            if (not 'password' in self._processorConfig):
+                self._processorConfig['password'] = None
+            
+            self._mqttClient.username_pw_set(self._processorConfig['username'], self._processorConfig['password'])
+        
+        # catch potential mistake on password
+        if ((not 'username' in self._processorConfig) and ('password' in self._processorConfig)):
+            raise P1ConfigurationError('Missing username: MQTT Processor cannot have a password without a username') # type: ignore
+
         self.connectMQTT()
 
     def connectMQTT(self) -> None:

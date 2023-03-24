@@ -47,8 +47,6 @@
         "type",
         "broker",
         "tcpPort",
-        "username",
-        "password",
         "topics"
     ],
     "additionalProperties": false
