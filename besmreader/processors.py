@@ -142,13 +142,24 @@ class MQTTP1Processor (P1Processor, LoggedClass):
             self._mqttClient.ws_set_options(self._processorConfig["websockets"]["path"], headers= self._processorConfig["websockets"]["headers"])
 
         if (('tls' in self._processorConfig) and (self._processorConfig['tls']['useTLS'])):
+            tlsConfig = dict()
             rootCAFileName = 'config.crt'
             
             if ('rootCAFileName' in self._processorConfig['tls']):
                 rootCAFileName = self._processorConfig['tls']['rootCAFileName']
             
-            rootCAFilePath = os.path.abspath(os.path.join(os.getcwd(), 'config', rootCAFileName))
-            self._mqttClient.tls_set(ca_certs=rootCAFilePath, tls_version=ssl.PROTOCOL_TLSv1_2, cert_reqs=ssl.CERT_NONE)
+            tlsConfig["ca_certs"] = os.path.abspath(os.path.join(os.getcwd(), 'config', rootCAFileName))
+            if ("tlsVersion" in self._processorConfig['tls']):
+                tlsConfig["tls_version"] = ssl.__dict__[self._processorConfig['tls']['tlsVersion']]
+            else:
+                tlsConfig["tls_version"] = ssl.PROTOCOL_TLSv1_2
+            
+            if ("certReqs" in self._processorConfig['tls']):
+                tlsConfig["cert_reqs"] = ssl.__dict__[self._processorConfig['tls']['certReqs']]
+            else:
+                tlsConfig["cert_reqs"] = ssl.CERT_NONE
+
+            self._mqttClient.tls_set(**tlsConfig)
             
             if (('setTLSInsecure' in self._processorConfig['tls']) and (self._processorConfig['tls']['setTLSInsecure'])):
                 self._mqttClient.tls_insecure_set(True)

@@ -151,13 +151,26 @@ Common settings to all scenarios:
 ##### using `websockets` connections (optional)
 
 By default, the MQTT processor uses `tcp` connection.
-If you want to use websockets you must define a `websockets` block and set the following options:
+If you want to use websockets you must define a `websockets` **block** and set the following options:
 
 * `enabled` (mandatory) must be set to `true` to use websockets. Defaults to false.
 * `path` (mandatory) must be set to the websockets endpoint name (eg `/mqtt)`.
 * `headers` (optional) is a dictionary of headers to be passed to the websockets broker.
 
+Example of `websockets` block:
+```json
+"websockets": {
+    "enabled": true,
+    "path": "/mqtt_ws",
+    "headers": {
+        "X-CUSTOM-HEADER", "abcdefghihjKLMNOPQRST1111"
+    }
+}
+```
+
 ##### using `username` and `password` authentication (optional)
+
+These items are to be put direcly in the MQTT processor definition:
 
 * `username` (optional, *mandatory if `password` is populated*)
     * The MQTT username, if any
@@ -166,6 +179,27 @@ If you want to use websockets you must define a `websockets` block and set the f
 
 ##### using `tls` connection (optional) and authentication (optional)
 
+Use of TLS requires the creation of a `tls` **block** which can have the following properties:
+
+* TLS connectivity properties:
+    * `useTLS` (mandatory if `tls` block exists)
+        * should be set to `true` to use TLS or `false` not to use it
+        * if there is no `tls` block, is set to `false`
+    * `setTLSInsecure` (optional)
+        * Default value is `false`
+    * `rootCAFileName` (optional)
+        * Default value is `config.crt`
+        * Path is relative to the `/config` folder
+        * Providing a certificate is mandatory. Example is given for *Let's Encrypt*
+    * `tlsVersion` (optional)
+        * Default value `PROTOCOL_TLSv1_2`
+        * Possible values are `PROTOCOL_TLSv1_2`, `PROTOCOL_TLSv1_1`, `PROTOCOL_TLSv1`, `PROTOCOL_SSLv3`, `PROTOCOL_SSLv23`, `PROTOCOL_SSLv2`
+    * `certReqs` (optional)
+        * Default value is `CERT_NONE`
+        * Possible values are `CERT_NONE`, `CERT_OPTIONAL`, `CERT_REQUIRED`
+
+* TLS authentication properties:
+    * **TODO**
 
 ### `scheduling` Section
 
