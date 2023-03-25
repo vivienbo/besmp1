@@ -86,7 +86,8 @@
             "type": "string"
           },
           "mode": {
-            "type": "string"
+            "type": "string",
+            "enum": ["current", "average"]
           },
           "applyTo": {
             "type": "array",

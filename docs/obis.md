@@ -33,4 +33,32 @@ Replacements for privacy:
 !hhhh
 ```
 
+## Reference document
+
 [More information on OBIS meaning (IEC62056)](https://www.promotic.eu/en/pmdoc/Subsystems/Comm/PmDrivers/IEC62056_OBIS.htm)
+
+## Belgian-specific information (not in reference document)
+
+| OBIS Code | Meaning |
+| -- | -- |
+| 1.0.0 | The date of this measurement in YYYYMMDDhhmmss**X** format <br/>where **X** is  **W** for Winter and **S** for Summer |
+| 1.4.0 | *TODO* |
+| 1.6.0 | *TODO* |
+| 1.8.1 | Energy consumed in Daytime tariff |
+| 1.8.2 | Energy consumed in Nighttime tariff |
+| 2.8.1 | Energy injected in Daytime tariff |
+| 2.8.2 | Energy injected in Nighttime tariff |
+| 17.0.0 | *TODO* |
+| **P**1.4.0 | Used if the Smart Meter is asked to limit maximum current in Phase **P** (eg budget meter mode) |
+| 96.1.1 | *TODO* |
+| 96.3.10 | *TODO* |
+| 96.13.0 | Text Message from the electricity network operator |
+| 96.14.0 | *TODO* |
+| 98.1.0 | *TODO* |
+
+Where P means:
+| P value | Phase number |
+| -- | -- |
+| 3 | Phase 1 (used by single and three-phase meters) |
+| 5 | Phase 2 (only for three-phase meters) |
+| 7 | Phase 3 (only for three-phase meters) |

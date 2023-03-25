@@ -145,6 +145,9 @@ class MQTTP1Processor (P1Processor, LoggedClass):
             tlsConfig = dict()
             rootCAFileName = 'config.crt'
             
+            #
+            # TLS connectivity parameters
+            #
             if ('rootCAFileName' in self._processorConfig['tls']):
                 rootCAFileName = self._processorConfig['tls']['rootCAFileName']
             
@@ -158,6 +161,19 @@ class MQTTP1Processor (P1Processor, LoggedClass):
                 tlsConfig["cert_reqs"] = ssl.__dict__[self._processorConfig['tls']['certReqs']]
             else:
                 tlsConfig["cert_reqs"] = ssl.CERT_NONE
+
+            if("ciphers" in self._processorConfig['tls']):
+                tlsConfig["ciphers"] = self._processorConfig['tls']['ciphers']
+
+            #
+            # TLS Authentication parameters
+            #
+            if (('certfile' in self._processorConfig['tls']) or ('keyfile' in self._processorConfig['tls'])):
+                if ((('certfile' in self._processorConfig['tls']) and ('keyfile' in self._processorConfig['tls']))):
+                    tlsConfig["certfile"] = os.path.abspath(os.path.join(os.getcwd(), 'config', self._processorConfig['tls']['certfile']))
+                    tlsConfig["keyfile"] = os.path.abspath(os.path.join(os.getcwd(), 'config', self._processorConfig['tls']['keyfile']))
+                else:
+                    raise P1ConfigurationError("For TLS authentication, both 'certfile' and 'keyfile' must be provided") # type: ignore
 
             self._mqttClient.tls_set(**tlsConfig)
             

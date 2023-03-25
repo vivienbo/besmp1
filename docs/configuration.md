@@ -194,13 +194,52 @@ Use of TLS requires the creation of a `tls` **block** which can have the followi
     * `tlsVersion` (optional)
         * Default value `PROTOCOL_TLSv1_2`
         * Possible values are `PROTOCOL_TLSv1_2`, `PROTOCOL_TLSv1_1`, `PROTOCOL_TLSv1`, `PROTOCOL_SSLv3`, `PROTOCOL_SSLv23`, `PROTOCOL_SSLv2`
+    * `ciphers` (optional)
+        * Default value are python `ssl` library default ciphers
     * `certReqs` (optional)
         * Default value is `CERT_NONE`
         * Possible values are `CERT_NONE`, `CERT_OPTIONAL`, `CERT_REQUIRED`
 
 * TLS authentication properties:
-    * **TODO**
+    * `certfile` (optional, *mandatory for TLS authentication*)
+        * Path is relative to the `/config` folder
+        * Must contrain the public certificate of the client
+    * `keyfile` (optional, *mandatory for TLS authentication*)
+        * Path is relative to the `/config` folder
+        * Must contrain the private key of the client
 
 ### `scheduling` Section
 
-**Mandatory section**. TODO.
+Scheduling section is made of a table of schedule objects with the following fields:
+
+* `cronFormat` (mandatory)
+    * The time and periodicity at which the processor will be called
+    * Uses [UNIX cron format](https://crontab.guru/) with an optional 6th field for seconds
+    * Exemple: 1 2 * * * 0/30: at 2h01m00s and  2h01m30s everyday
+* `processor` (mandatory)
+    * Must be the name of a [processor](#processors-section) that will be triggered
+* `mode` (mandatory)
+    * Two modes are supported:
+        * `average`: each second, the value will be added to a list and at the time of the trigger,
+        the mathematical mean will be calculated and transmitted
+        * `current`: the instant / current value is transmitted when the schedule is triggered
+* `applyTo` (mandatory)
+    * a list of [OBIS codes](https://github.com/vivienbo/belgian-smartmeter-p1-to-mqtt/blob/main/docs/obis.md)
+    in a slightly modified format for multi-values
+    * only the listed OBIS codes will be transmitted, and only if they were received
+
+```json
+{
+    "cronFormat": "* * * * * 0/30",
+    "processor": "mqttShirka",
+    "mode": "average",
+    "applyTo": [
+        "1-0:1.8.0",
+        "1-0:1.8.1",
+        "1-0:1.8.2",
+        "1-0:2.8.0",
+        "1-0:2.8.1",
+        "1-0:2.8.2"
+    ]
+}
+```
