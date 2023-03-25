@@ -33,6 +33,10 @@ class P1Sequence:
     def packetSignature(self) -> str:
         return self._packetSignature
 
+    @property
+    def hasPacketSignature(self) -> bool:
+        return (not self.packetSignature is None)
+
     @packetSignature.setter
     def packetSignature(self, signature: str):
         self._packetSignature = signature
@@ -117,10 +121,7 @@ class P1Sequence:
         self._systemTimeZoneMessageTime = localMessageDateTime.astimezone(self._systemTimeZone)
 
     def __keepAcceptingInformation(self):
-        if (self._systemTimeZoneMessageTime == None):
-            return True
-        # TODO
-        return True
+        return (not self.hasPacketSignature)
 
     def applyTransformations(self):
         transformations = self._config.p1Transformations
