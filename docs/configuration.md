@@ -81,9 +81,11 @@ take any action on read values.
 
 #### `print` processor
 
-* `Type` must always be `print`
+* `type` (mandatory)
+    * For the print processor, `type` must always be `print`
 * `topics` is a dictionary translating from an OBIS code to a text which
-    will be printed out to the console (`stdout` or equivalent), followed by 
+    will be printed out to the console (`stdout` or equivalent), followed by " = ",
+    followed by the value. [More information on the slightly modified OBIS format used](https://github.com/vivienbo/belgian-smartmeter-p1-to-mqtt/tree/main/docs/obis.md)
 
 Example:
 ```json
@@ -91,23 +93,55 @@ Example:
     "type": "print",
     "topics": {
         "1-0:1.8.1": "Consumed Index - Daytime Tariff",
-        "1-0:1.8.2": "Consumed Index - Nighttime Tariff",
-        "1-0:2.8.0": "smartmeter/electricity/reading/injection/total",
-        "1-0:2.8.1": "smartmeter/electricity/reading/injection/day_tariff",
-        "1-0:2.8.2": "smartmeter/electricity/reading/injection/night_tariff",
-        "1-0:21.7.0": "smartmeter/electricity/instant/L1/power/consumption",
-        "1-0:22.7.0": "smartmeter/electricity/instant/L1/power/injection",
-        "1-0:31.7.0": "smartmeter/electricity/instant/L1/intensity",
-        "1-0:32.7.0": "smartmeter/electricity/instant/L1/tension"                
+        "1-0:1.8.2": "Consumed Index - Nighttime Tariff"              
     }
 },
 ```
 
 #### `logger` processor
 
+* `type` (mandatory)
+    * For the print processor, `type` must always be `logger`
+* `logLevel` (optional)
+    * The log level in which the messages are logged. `INFO` by default. List of all possible levels
+    is available [in the python logging library documentation](https://docs.python.org/3/library/logging.html#logging-levels)
+* `topics` is a dictionary translating from an OBIS code to a text which
+    will be printed out to the console (`stdout` or equivalent), followed by " = ",
+    followed by the value. [More information on the slightly modified OBIS format used](https://github.com/vivienbo/belgian-smartmeter-p1-to-mqtt/tree/main/docs/obis.md)
+
+Example:
+```json
+"printMode": {
+    "type": "logger",
+    "logLevel": "DEBUG",
+    "topics": {
+        "1-0:1.8.1": "Consumed Index/Daytime Tariff",
+        "1-0:1.8.2": "Consumed Index/Nighttime Tariff"              
+    }
+},
+```
+
 #### `mqtt` processor
 
-[Click here if you need more information on the OBIS format and example of Belgian SmartMeter output](https://github.com/vivienbo/belgian-smartmeter-p1-to-mqtt/tree/main/docs/obis.md)
+Common settings to all scenarios:
+
+* `type` (mandatory)
+    * For the print processor, `type` must always be `mqtt`
+* `broker` (mandatory)
+    * The IP address or DNS name of the MQTT broker (e.g. MosQuiTTo server)
+* `port` (optional)
+    * The port number for the connection
+    * By default, this is 1883 in case TLS is not used. This is 8883 if TLS is used.
+    * Note it does not take into account whether the transport is `websockets` or `tcp`
+
+##### using `websockets` connections (optional)
+
+By default, the MQTT processor uses `tcp` connection.
+If you want to use websockets you must define a `websockets` block and set the following options:
+
+* `enabled` (mandatory) must be set to `true` to use websockets. Defaults to false.
+* `path` (mandatory) must be set to the websockets endpoint name (eg `/mqtt)`.
+* `headers` (optional) is a dictionary of headers to be passed to the websockets broker.
 
 ### `scheduling` Section
 

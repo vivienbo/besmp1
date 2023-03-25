@@ -10,8 +10,33 @@
         "broker": {
             "type": "string"
         },
-        "tcpPort": {
+        "port": {
             "type": "number"
+        },
+        "clientId": {
+            "type": "string"
+        },
+        "websockets": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "headers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "enabled",
+                "path"
+            ],
+            "additionalProperties": false
         },
         "username": {
             "type": "string"
@@ -46,7 +71,6 @@
     "required": [
         "type",
         "broker",
-        "tcpPort",
         "topics"
     ],
     "additionalProperties": false

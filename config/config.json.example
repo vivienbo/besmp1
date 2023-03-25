@@ -63,7 +63,7 @@
         "mqttShirka": {
             "type": "mqtt",
             "broker": "your.mqtt.domain.name.or.ip",
-            "tcpPort": 8883,
+            "port": 8883,
             "tls": {
                 "useTLS": true,
                 "setTLSInsecure": true,

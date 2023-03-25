@@ -110,9 +110,29 @@ class MQTTP1Processor (P1Processor, LoggedClass):
         P1Processor.__init__(self, processorConfig)
         LoggedClass.__init__(self)
 
-        self._mqttClient = paho.Client(client_id="belgian-smartmeter-p1-to-mqtt")
+        transport = "tcp"
+        if (("websockets" in self._processorConfig) and ("enabled" in self._processorConfig["websockets"]) and self._processorConfig["websockets"]["enabled"]):
+            transport = "websockets"
+
+        #
+        # clientId name
+        #
+        clientId = "belgian-smartmeter-p1-to-mqtt"
+        if ("clientId" in self._processorConfig):
+            clientId = self._processorConfig["clientId"]
+
+        self._mqttClient = paho.Client(client_id= clientId, transport= transport)
         self._mqttClient.on_connect = MQTTP1Processor.on_connect
         
+        #
+        # Websockets endpoint and headers configuration
+        #
+        if (transport == "websockets"):
+            if (not "headers" in self._processorConfig["websockets"]):
+                self._processorConfig["websockets"]["headers"] = None
+
+            self._mqttClient.ws_set_options(self._processorConfig["websockets"]["path"], headers= self._processorConfig["websockets"]["headers"])
+
         if (('tls' in self._processorConfig) and (self._processorConfig['tls']['useTLS'])):
             rootCAFileName = 'config.crt'
             
@@ -124,7 +144,13 @@ class MQTTP1Processor (P1Processor, LoggedClass):
             
             if (('setTLSInsecure' in self._processorConfig['tls']) and (self._processorConfig['tls']['setTLSInsecure'])):
                 self._mqttClient.tls_insecure_set(True)
+
+            if (not 'port' in self._processorConfig):
+                self._processorConfig['port'] = 8883
         
+        #
+        # Routine for username authentication
+        #
         if ('username' in self._processorConfig):
             if (not 'password' in self._processorConfig):
                 self._processorConfig['password'] = None
@@ -135,10 +161,16 @@ class MQTTP1Processor (P1Processor, LoggedClass):
         if ((not 'username' in self._processorConfig) and ('password' in self._processorConfig)):
             raise P1ConfigurationError('Missing username: MQTT Processor cannot have a password without a username') # type: ignore
 
+        #
+        # Port configuration
+        #
+        if (not 'port' in self._processorConfig):
+            self._processorConfig['port'] = 1883
+
         self.connectMQTT()
 
     def connectMQTT(self) -> None:
-        self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['tcpPort'], 60)    
+        self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['port'], 60)    
 
     def processInformation(self, processLabel: str, processValue: str) -> None:
         if (not self._mqttClient.is_connected):
