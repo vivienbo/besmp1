@@ -38,7 +38,7 @@ class ReadFromCOMPortThread(Thread, LoggedClass):
                 self.rawDataQueue.put(rawLine)
         except Exception as exceptionMet:
             super().logger.error('Exception while reading from serial: %s', str(type(exceptionMet)))
-            super().logger.error('%s', str(exceptionMet))
+            super().logger.exception("Stack Trace")
             self.stopReadingEvent.set()
 
         self.closePort()
@@ -86,7 +86,8 @@ class ParseP1RawDataThread (Thread, LoggedClass):
                         self.currentSequence.addInformationFromDataLine(cleanDataLine)
         except Exception as exceptionMet:
             super().logger.error('Exception while parsing raw data: %s', str(type(exceptionMet)))
-            super().logger.error('%s', str(exceptionMet))
+            super().logger.exception("Stack Trace")
+
             self.stopReadingEvent.set()
         
         super().logger.info('Stopped')
@@ -125,7 +126,7 @@ class ProcessP1SequencesThread(Thread, LoggedClass):
                     self.globalConfiguration.scheduler.processP1(p1Sequence)
         except Exception as exceptionMet:
             super().logger.error('Exception processing sequences: %s', str(type(exceptionMet)))
-            super().logger.error('%s', str(exceptionMet))
+            super().logger.exception("Stack Trace")
             self.stopReadingEvent.set()
         
         super().logger.info('Stopped')
