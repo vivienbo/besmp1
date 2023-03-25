@@ -13,6 +13,10 @@
         "port": {
             "type": "number"
         },
+        "protocol": {
+            "type": "string",
+            "enum": ["MQTTv31", "MQTTv311", "MQTTv5"]
+        },
         "clientId": {
             "type": "string"
         },

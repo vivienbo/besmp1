@@ -81,6 +81,8 @@ take any action on read values.
 
 #### `print` processor
 
+[Print processor schema is available here](https://github.com/vivienbo/belgian-smartmeter-p1-to-mqtt/blob/main/schema/print.processor.schema.json)
+
 * `type` (mandatory)
     * For the print processor, `type` must always be `print`
 * `topics` is a dictionary translating from an OBIS code to a text which
@@ -99,6 +101,8 @@ Example:
 ```
 
 #### `logger` processor
+
+[Logger processor schema is available here](https://github.com/vivienbo/belgian-smartmeter-p1-to-mqtt/blob/main/schema/logger.processor.schema.json)
 
 * `type` (mandatory)
     * For the print processor, `type` must always be `logger`
@@ -123,16 +127,26 @@ Example:
 
 #### `mqtt` processor
 
+[MQTT Processor schema is available here](https://github.com/vivienbo/belgian-smartmeter-p1-to-mqtt/blob/main/schema/mqtt.processor.schema.json)
 Common settings to all scenarios:
 
 * `type` (mandatory)
     * For the print processor, `type` must always be `mqtt`
+* `topics` (mandatory)
+    * Is a map of OBIS codes to MQTT topics
 * `broker` (mandatory)
     * The IP address or DNS name of the MQTT broker (e.g. MosQuiTTo server)
 * `port` (optional)
     * The port number for the connection
     * By default, this is 1883 in case TLS is not used. This is 8883 if TLS is used.
     * Note it does not take into account whether the transport is `websockets` or `tcp`
+* `protocol` (optional)
+    * Must be one of `MQTTv31`, `MQTTv311` or `MQTTv5`
+    * Note that in any case, clean_session will be set to `true`
+    * Default value is the Paho MQTT default value.
+* `clientId` (optional)
+    * Overrides the client_id property in MQTT
+    * Default value is `belgian-smartmeter-p1-to-mqtt`
 
 ##### using `websockets` connections (optional)
 
@@ -142,6 +156,16 @@ If you want to use websockets you must define a `websockets` block and set the f
 * `enabled` (mandatory) must be set to `true` to use websockets. Defaults to false.
 * `path` (mandatory) must be set to the websockets endpoint name (eg `/mqtt)`.
 * `headers` (optional) is a dictionary of headers to be passed to the websockets broker.
+
+##### using `username` and `password` authentication (optional)
+
+* `username` (optional, *mandatory if `password` is populated*)
+    * The MQTT username, if any
+* `password` (optional)
+    * The MQTT password, if any
+
+##### using `tls` connection (optional) and authentication (optional)
+
 
 ### `scheduling` Section
 

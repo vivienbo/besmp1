@@ -110,24 +110,32 @@ class MQTTP1Processor (P1Processor, LoggedClass):
         P1Processor.__init__(self, processorConfig)
         LoggedClass.__init__(self)
 
-        transport = "tcp"
+        pahoClientInit = dict()
+
+        pahoClientInit["transport"] = "tcp"
         if (("websockets" in self._processorConfig) and ("enabled" in self._processorConfig["websockets"]) and self._processorConfig["websockets"]["enabled"]):
-            transport = "websockets"
+            pahoClientInit["transport"] = "websockets"
 
         #
         # clientId name
         #
-        clientId = "belgian-smartmeter-p1-to-mqtt"
+        pahoClientInit["client_id"] = "belgian-smartmeter-p1-to-mqtt"
         if ("clientId" in self._processorConfig):
-            clientId = self._processorConfig["clientId"]
+            pahoClientInit["client_id"] = self._processorConfig["clientId"]
+        
+        #
+        # Protocol detection and addition
+        #
+        if ("protocol" in self._processorConfig):
+            pahoClientInit["protocol"] = paho.__dict__[self._processorConfig["protocol"]]
 
-        self._mqttClient = paho.Client(client_id= clientId, transport= transport)
+        self._mqttClient = paho.Client(**pahoClientInit)
         self._mqttClient.on_connect = MQTTP1Processor.on_connect
         
         #
         # Websockets endpoint and headers configuration
         #
-        if (transport == "websockets"):
+        if (pahoClientInit["transport"] == "websockets"):
             if (not "headers" in self._processorConfig["websockets"]):
                 self._processorConfig["websockets"]["headers"] = None
 
