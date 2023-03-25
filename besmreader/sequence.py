@@ -89,11 +89,18 @@ class P1Sequence:
     def applyTransformations(self):
         transformations = self._config.p1Transformations
         for id in transformations:
+            info = dict()
             result = 0
             if (transformations[id]["operation"] == "sum"):
                 for operand in transformations[id]["operands"]:
                     result += self.getInformationValue(operand)
-            self.addInformation(id, result)
+            
+            info["obisIdentifier"] = id
+            info["obisValue"] = result
+            if ("unit" in transformations[id]):
+                info["obisUnit"] = transformations[id]["unit"]
+
+            self.addInformation(**info)
 
     def __str__(self):
         theString = ""

@@ -40,7 +40,7 @@
 
 **Mandatory section** with three properties:
 * `port`, `baudrate` and `timeout`: as per [PySerial native port documentation](https://pyserial.readthedocs.io/en/latest/pyserial_api.html#native-ports)
-* if `timeout` isn't set, default value is `5`
+* if `timeout` isn't set, default value is `5` (seconds)
 
 ### `p1Transform` section
 
@@ -48,16 +48,20 @@
 Transformations allows to do basic calculation on OBIS values to create a new OBIS value.
 Objects are composed of:
 
-* `object name` must be in the OBIS Format (eg `1-0:1.8.0`).
+* `object name` (mandatory)
+    * Must be in the OBIS Format (eg `1-0:1.8.0`).
     * If the object name corresponds to an existing object, it replaces this object from
     the SmartMeter output.
     * If the object uses result from another transformation, it must be a transformation
     declared later in the file (avoids infinite loops)
-* `operation` property
+* `operation` (mandatory)
     * `sum` is currently the only supported operation
-* `operands` list
+* `operands` list (mandatory)
     * list of the OBIS codes (`string`) which are to be summed. Not that the transformation
     does **not** check that the units are consistent when doing the `operation`.
+* `unit` (optional)
+    * Default value is `kWh`
+    * Defines the unit of the result
 
 Typical use case is for the total consumed kWh index (`1-0:1.8.0`) and total injected kWh index (`1-0:2.8.0`) displayed on the SmartMeter screen but which is no transmitted through the Serial Port.
 
@@ -69,7 +73,8 @@ Example for a `p1Transform` block containing only the `1-0:1.8.0` definition:
         "operands": [
             "1-0:1.8.1",
             "1-0:1.8.2"
-        ]
+        ],
+        "unit": "kWh"
     }
 }
 ```
@@ -228,18 +233,19 @@ Scheduling section is made of a table of schedule objects with the following fie
     in a slightly modified format for multi-values
     * only the listed OBIS codes will be transmitted, and only if they were received
 
+Example of a script which runs every 30 seconds and sends the 30s average (mathematical mean)
+of the instant injected power, consumed power, intensity and tension.
+
 ```json
 {
     "cronFormat": "* * * * * 0/30",
     "processor": "mqttShirka",
     "mode": "average",
     "applyTo": [
-        "1-0:1.8.0",
-        "1-0:1.8.1",
-        "1-0:1.8.2",
-        "1-0:2.8.0",
-        "1-0:2.8.1",
-        "1-0:2.8.2"
+        "1-0:21.7.0",
+        "1-0:22.7.0",
+        "1-0:31.7.0",
+        "1-0:32.7.0"
     ]
 }
 ```

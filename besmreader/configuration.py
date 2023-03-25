@@ -106,7 +106,7 @@ class P1Configuration:
     @property
     def p1Transformations(self) -> dict:
         if (not "p1Transform" in self._configData):
-            return {}
+            self._configData["p1Transform"] = dict()
         return self._configData["p1Transform"]
 
     @property
