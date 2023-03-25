@@ -37,21 +37,42 @@ class P1Sequence:
     def packetSignature(self, signature: str):
         self._packetSignature = signature
 
-    def hasInformation(self, label: str):
-        return label in self._informations
-
-    def getInformationValue(self, label: str):
-        if(label in self._informations):
-            return self._informations[label]["value"]
+    #
+    # This routine tries to split the OBIS Code into two parts:
+    # * The standard OBIS code in format 0-0:0.0.0.0*0
+    # * The specific format added to get multivalues: "/0"
+    #
+    # returns a list of (OBISCode, multiValueIndex)
+    #
+    def _splitInformationOBISCode(self, obisCode: str) -> tuple[str, int]:
+        foundLabels = obisCode.split('/')
+        if (foundLabels):
+            if (len(foundLabels) < 2):
+                foundLabels.append("0")
+            return foundLabels[0], int(foundLabels[1])
         else:
-            return 0
+            return None, None
 
-    def getInformationUnit(self, label: str):
+    def hasInformation(self, obisCode: str):
+        label, subItem = self._splitInformationOBISCode(obisCode)
+        return (label in self._informations) and (len(self._informations[label]) > subItem)
+
+    def getInformationValue(self, obisCode: str):
+        label, subItem = self._splitInformationOBISCode(obisCode)
         if(label in self._informations):
-            if ("unit" in self._informations[label]):
-                return self._informations[label]["unit"]
-        else:
-            return None
+            if (len(self._informations[label]) > subItem):
+                return self._informations[label][subItem]["value"]
+
+        return 0
+
+    def getInformationUnit(self, obisCode: str):
+        label, subItem = self._splitInformationOBISCode(obisCode)
+        if(label in self._informations):
+            if (len(self._informations[label]) > subItem):
+                if ("unit" in self._informations[label][subItem]):
+                    return self._informations[label][subItem]["unit"]
+
+        return None
     
     def addInformationFromDataLine(self, dataLine: str):
         if (self.__keepAcceptingInformation()):
@@ -67,12 +88,27 @@ class P1Sequence:
                     obisUnit = reValueRead[0][7]
                     if (obisValue is not None):
                         if(re.findall(r'0-0:96\.1', obisIdentifier)):
-                            self._informations[obisIdentifier] = {"value": obisValue, "unit": obisUnit}
+                            self._informations[obisIdentifier] = [
+                                {
+                                    "value" : obisValue,
+                                    "unit": obisUnit
+                                }
+                            ]
                         else:
-                            self._informations[obisIdentifier] = {"value": Decimal(obisValue), "unit": obisUnit}
+                            self._informations[obisIdentifier] = [
+                                {
+                                    "value": Decimal(obisValue),
+                                    "unit": obisUnit
+                                }
+                            ]
 
     def addInformation(self, obisIdentifier: str, obisValue: float, obisUnit: str = 'kWh'):
-        self._informations[obisIdentifier] = {"value": Decimal(obisValue), "unit": obisUnit}
+        self._informations[obisIdentifier] = [
+            {
+                "value": Decimal(obisValue),
+                "unit": obisUnit
+            }
+        ]
 
     def __setMessageTimeInSystemTimezone(self, dateTxt: str, tzTxt: str):
         is_dst = (tzTxt == "S")
