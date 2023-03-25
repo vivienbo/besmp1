@@ -36,12 +36,12 @@ class P1Processor:
             raise P1ConfigurationError('Configuration error: Could not find schema for processor: ' + self.getConfigurationName()) # type: ignore
 
     def processSequence(self, p1Sequence: P1Sequence, applyTo: dict) -> None:
-        for label in applyTo:
-            if ((p1Sequence.hasInformation(label)) and (label in self._processorConfig["topics"])):
-                self.processInformation(self._processorConfig["topics"][label], p1Sequence.getInformationValue(label))
+        for obisCode in applyTo:
+            if ((p1Sequence.hasInformation(obisCode)) and (obisCode in self._processorConfig["topics"])):
+                self.processInformation(self._processorConfig["topics"][obisCode], p1Sequence.getInformationValue(obisCode), p1Sequence.getInformationUnit(obisCode))
 
     @abstractmethod
-    def processInformation(self, processLabel: str, processValue: str) -> None:
+    def processInformation(self, processLabel: str, processValue: str, processUnit: str) -> None:
         pass
 
     @abstractmethod
@@ -62,8 +62,8 @@ class PrintP1Processor (P1Processor):
     def __init__(self, processorConfig: dict) -> None:
         super().__init__(processorConfig)
 
-    def processInformation(self, processLabel: str, processValue: str) -> None:
-        print(processLabel + " = " + str(processValue))
+    def processInformation(self, processLabel: str, processValue: str, processUnit: str) -> None:
+        print(processLabel + " = " + str(processValue) + " " + str(processUnit))
 
     def closeProcessor(self) -> None:
         pass
@@ -82,8 +82,8 @@ class LoggerP1Processor (P1Processor, LoggedClass):
             processorConfig["logLevel"] = "INFO"
         self._loggerLevel = logging.__dict__[processorConfig["logLevel"]]
 
-    def processInformation(self, processLabel: str, processValue: str) -> None:
-        super().logger.log(self._loggerLevel, '%s: %s', processLabel, str(processValue))
+    def processInformation(self, processLabel: str, processValue: str, processUnit: str) -> None:
+        super().logger.log(self._loggerLevel, '%s: %s %s', processLabel, str(processValue), str(processUnit))
 
     def closeProcessor(self) -> None:
         pass
@@ -207,7 +207,7 @@ class MQTTP1Processor (P1Processor, LoggedClass):
     def connectMQTT(self) -> None:
         self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['port'], 60)    
 
-    def processInformation(self, processLabel: str, processValue: str) -> None:
+    def processInformation(self, processLabel: str, processValue: str, processUnit: str) -> None:
         if (not self._mqttClient.is_connected):
             self.connectMQTT()
         self._mqttClient.publish(topic=processLabel, payload=str(processValue))
