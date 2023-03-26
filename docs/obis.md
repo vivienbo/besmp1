@@ -1,5 +1,22 @@
 # OBIS Format information
 
+## Slightly modified OBIS Format Support
+
+The standard OBIS Format is composed of a sequence in the form of `n-n:nnn.nnn.nnn(.nnn)(\*nnn)`. Examples are listed below.
+The OBIS Format used in this project configuration files is slightly modified to introduce a `/nnn` in case of multiple values.
+
+Take this line as example:
+`1-0:1.6.0(230318200000W)(04.470*kW)`
+
+Its meaning is:
+* First value: the date at which the 15-min average peak consumption of the month happened
+* Second value: the peak consumption in kW at the peak time
+
+If you want to refer to the date, you would need to use `1-0:1.6.0/0` syntax.
+And if you want to refer to the peak consumption, you would need to use `1-0:1.6.0/1`.
+
+This is useful for electricity network operators who implemented a capacitive pricing model (eg Fluvius in Flanders).
+
 ## Example output from Ores SmartMeter (Siconia S211)
 
 Replacements for privacy:
