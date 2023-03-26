@@ -78,21 +78,16 @@ flowchart LR
     * Siconia T211 (Fluvius, Ores)
 * **Reader Workstation**:
     * Operating System: Windows Server 2022
-    * Driver: xxx driver
+    * Driver: [FTDI driver](https://ftdichip.com/drivers/)
     * Python: version 3.11.2
 * **MQTT Server**: Mosquitto version 2.0.14
 * **OpenHAB Server**: OpenHAB version 3.4
 
-## Architecture (TODO)
-
-
 ## Known Limitation
 
 * If multiple values are returned in an OBIS entry, only the first value is returned (#4)
-* Not all MQTT authentication scenarios are supported yet (#3)
 * Dates in values are not supported (eg in case of Water meter centralized by Electricity Smart Meter or for measuring peak consumption with Fluvius, not yet used by Ores and Resa but already calculated)
 
 ## TODO
 
-* Document the configuration file format
 * Nice to have :: Windows Service Wrapper? Linux Service Wrapper?

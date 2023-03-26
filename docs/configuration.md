@@ -60,7 +60,7 @@ Objects are composed of:
     * list of the OBIS codes (`string`) which are to be summed. Not that the transformation
     does **not** check that the units are consistent when doing the `operation`.
 * `unit` (optional)
-    * Default value is `kWh`
+    * Default value is `None` object type in python (`null` in JSON)
     * Defines the unit of the result
 
 Typical use case is for the total consumed kWh index (`1-0:1.8.0`) and total injected kWh index (`1-0:2.8.0`) displayed on the SmartMeter screen but which is no transmitted through the Serial Port.
