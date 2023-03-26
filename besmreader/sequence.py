@@ -11,6 +11,12 @@ class P1Sequence:
         A P1Sequence is a set of OBIS-format information starting with a \FLU sequence
         and ending with a !ABCD hash.
     """
+    OBIS_PACKET_DATE = r'0-0:1.0.0'
+    REGEXP_OBIS_CODE_AND_VALUES = r'((\d+-\d+:\d+\.\d+\.\d+(\.\d+)?(\*\d+)?)(\([\w.*-:]*\))+)'
+    REGEXP_OBIS_VALUE_DATE = r'(\d+)([SW])'
+    REGEXP_OBIS_VALUE_DECIMAL_WITH_UNIT = r'((\d+(\.\d+)?)(\*(\w+)))'
+    REGEXP_OBIS_VALUE_DECIMAL_WITHOUT_UNIT = r'(\d+(\.\d+)?)'
+    REGEXP_OBIS_VALUE_TEXT = r'([\w ,.!?/*-+=()]*)'
 
     def __init__(self, header: str, configuration):
         self._packetHeader = header
@@ -78,14 +84,37 @@ class P1Sequence:
 
         return None
     
+    def getInformationType(self, obisCode: str):
+        label, subItem = self._splitInformationOBISCode(obisCode)
+        if(label in self._informations):
+            if (len(self._informations[label]) > subItem):
+                if ("unit" in self._informations[label][subItem]):
+                    return type(self._informations[label][subItem]["value"])
+        
+        return None
+
     def addInformationFromDataLine(self, dataLine: str):
         if (self.__keepAcceptingInformation()):
             reTimeStamp = re.findall(r'(0-0:1.0.0(\.\d+)?(\*\d+)?)\((\d+)([SW])\)', dataLine)
             reValueRead = re.findall(r'(\d+-\d+:\d+\.\d+\.\d+(\.\d+)?(\*\d+)?)\(((\d+(\.\d+)?)(\*(\w+))?)?\)', dataLine)
 
-            if (reTimeStamp):
-                self.__setMessageTimeInSystemTimezone(reTimeStamp[0][3], reTimeStamp[0][4])
-            elif (reValueRead):
+            foundOBISInfo = re.findall(P1Sequence.REGEXP_OBIS_CODE_AND_VALUES, dataLine)
+
+            if (foundOBISInfo):
+                # Remove parenthesis before and after values
+                obisData = foundOBISInfo[0][0].split("(")
+                i = 0
+                while i < len(obisData):
+                    obisData[i] = obisData[i].replace(")", "")
+                    i += 1
+                
+                # OBIS Code is 0, the rest are values
+                if (obisData[0] == P1Sequence.OBIS_PACKET_DATE):
+                    obisIsDate = re.findall(P1Sequence.REGEXP_OBIS_VALUE_DATE, obisData[1])
+                    if (obisIsDate):
+                        self.__setMessageTimeInSystemTimezone(obisIsDate[0][0], obisIsDate[0][1])
+
+            if (reValueRead):
                 obisIdentifier = reValueRead[0][0]
                 if (obisIdentifier in self._config.filters):
                     obisValue = reValueRead[0][4]
@@ -106,7 +135,7 @@ class P1Sequence:
                                 }
                             ]
 
-    def addInformation(self, obisIdentifier: str, obisValue: float, obisUnit: str = 'kWh'):
+    def addInformation(self, obisIdentifier: str, obisValue: float, obisUnit: str = None):
         self._informations[obisIdentifier] = [
             {
                 "value": Decimal(obisValue),
