@@ -15,7 +15,7 @@ class P1Sequence:
     OBIS_PACKET_DATE = r'0-0:1.0.0'
     REGEXP_OBIS_CODE_AND_VALUES = r'((\d+-\d+:\d+\.\d+\.\d+(\.\d+)?(\*\d+)?)(\([\w ,.!?/*-+=:]*\))+)'
     REGEXP_OBIS_VALUE_DATE = r'(\d+)([SW])'
-    REGEXP_OBIS_VALUE_DECIMAL = r'((\d+(\.\d+)?)(\*(\w+))*)'
+    REGEXP_OBIS_VALUE_DECIMAL = r'((\d+(\.\d+)?)(\*(\w+))*)$'
     REGEXP_OBIS_VALUE_TEXT = r'([\w ,.!?/*-+=:]*)'
     REGEXP_OBIS_VALUE_CODE = r'(\d+-\d+:\d+\.\d+\.\d+(\.\d+)?(\*\d+)?)'
 

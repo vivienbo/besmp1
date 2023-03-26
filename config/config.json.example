@@ -43,7 +43,9 @@
                 "1-0:21.7.0": "smartmeter/electricity/instant/L1/power/consumption",
                 "1-0:22.7.0": "smartmeter/electricity/instant/L1/power/injection",
                 "1-0:31.7.0": "smartmeter/electricity/instant/L1/intensity",
-                "1-0:32.7.0": "smartmeter/electricity/instant/L1/tension"                
+                "1-0:32.7.0": "smartmeter/electricity/instant/L1/tension",
+                "1-0:1.6.0/0": "Peak consumtion date",
+                "1-0:1.6.0/1": "Peak consumtion value"
             }
         },
         "loggerInfoMode": {
@@ -104,7 +106,7 @@
         {
             "cronFormat": "* * * * * 0/20",
             "processor": "mqttShirka",
-            "mode": "current",
+            "mode": "average",
             "applyTo": [
                 "1-0:21.7.0",
                 "1-0:22.7.0",
@@ -117,7 +119,9 @@
             "processor": "printMode",
             "mode": "current",
             "applyTo": [
-                "1-0:1.8.0"
+                "1-0:1.8.0",
+                "1-0:1.6.0/0",
+                "1-0:1.6.0/1"
             ]
         },
         {
