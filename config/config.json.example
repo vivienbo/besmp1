@@ -18,14 +18,16 @@
             "operands": [
                 "1-0:1.8.1",
                 "1-0:1.8.2"
-            ]
+            ],
+            "unit": "kWh"
         },
         "1-0:2.8.0": {
             "operation": "sum",
             "operands": [
                 "1-0:2.8.1",
                 "1-0:2.8.2"
-            ]
+            ],
+            "unit": "kWh"
         }
     },
     "processors": {
