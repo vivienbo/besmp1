@@ -1,6 +1,7 @@
 from pytz import timezone
 from tzlocal import get_localzone
 
+from collections import deque
 from datetime import datetime
 from decimal import Decimal
 import re
@@ -12,11 +13,11 @@ class P1Sequence:
         and ending with a !ABCD hash.
     """
     OBIS_PACKET_DATE = r'0-0:1.0.0'
-    REGEXP_OBIS_CODE_AND_VALUES = r'((\d+-\d+:\d+\.\d+\.\d+(\.\d+)?(\*\d+)?)(\([\w.*-:]*\))+)'
+    REGEXP_OBIS_CODE_AND_VALUES = r'((\d+-\d+:\d+\.\d+\.\d+(\.\d+)?(\*\d+)?)(\([\w ,.!?/*-+=:]*\))+)'
     REGEXP_OBIS_VALUE_DATE = r'(\d+)([SW])'
-    REGEXP_OBIS_VALUE_DECIMAL_WITH_UNIT = r'((\d+(\.\d+)?)(\*(\w+)))'
-    REGEXP_OBIS_VALUE_DECIMAL_WITHOUT_UNIT = r'(\d+(\.\d+)?)'
-    REGEXP_OBIS_VALUE_TEXT = r'([\w ,.!?/*-+=()]*)'
+    REGEXP_OBIS_VALUE_DECIMAL = r'((\d+(\.\d+)?)(\*(\w+))*)'
+    REGEXP_OBIS_VALUE_TEXT = r'([\w ,.!?/*-+=:]*)'
+    REGEXP_OBIS_VALUE_CODE = r'(\d+-\d+:\d+\.\d+\.\d+(\.\d+)?(\*\d+)?)'
 
     def __init__(self, header: str, configuration):
         self._packetHeader = header
@@ -95,7 +96,6 @@ class P1Sequence:
 
     def addInformationFromDataLine(self, dataLine: str):
         if (self.__keepAcceptingInformation()):
-            reTimeStamp = re.findall(r'(0-0:1.0.0(\.\d+)?(\*\d+)?)\((\d+)([SW])\)', dataLine)
             reValueRead = re.findall(r'(\d+-\d+:\d+\.\d+\.\d+(\.\d+)?(\*\d+)?)\(((\d+(\.\d+)?)(\*(\w+))?)?\)', dataLine)
 
             foundOBISInfo = re.findall(P1Sequence.REGEXP_OBIS_CODE_AND_VALUES, dataLine)
@@ -108,32 +108,54 @@ class P1Sequence:
                     obisData[i] = obisData[i].replace(")", "")
                     i += 1
                 
+                obisIdentifier = obisData[0]
                 # OBIS Code is 0, the rest are values
-                if (obisData[0] == P1Sequence.OBIS_PACKET_DATE):
+                if (obisIdentifier == P1Sequence.OBIS_PACKET_DATE):
                     obisIsDate = re.findall(P1Sequence.REGEXP_OBIS_VALUE_DATE, obisData[1])
                     if (obisIsDate):
                         self.__setMessageTimeInSystemTimezone(obisIsDate[0][0], obisIsDate[0][1])
-
-            if (reValueRead):
-                obisIdentifier = reValueRead[0][0]
-                if (obisIdentifier in self._config.filters):
-                    obisValue = reValueRead[0][4]
-                    obisUnit = reValueRead[0][7]
-                    if (obisValue is not None):
-                        if(re.findall(r'0-0:96\.1', obisIdentifier)):
-                            self._informations[obisIdentifier] = [
-                                {
-                                    "value" : obisValue,
-                                    "unit": obisUnit
-                                }
-                            ]
+                else:
+                    obisContents = deque()
+                    for obisValue in obisData[1:]:
+                        obisIsValueDecimal = re.findall(P1Sequence.REGEXP_OBIS_VALUE_DECIMAL, obisValue)
+                        if (obisIsValueDecimal):
+                            theValue = Decimal(obisIsValueDecimal[0][1])
+                            theUnit = obisIsValueDecimal[0][4]
+                            theData = {
+                                "value": theValue
+                            }
+                            if (theUnit != ''):
+                                theData["unit"] = theUnit
+                            obisContents.append(theData)
+                            pass
                         else:
-                            self._informations[obisIdentifier] = [
-                                {
-                                    "value": Decimal(obisValue),
-                                    "unit": obisUnit
-                                }
-                            ]
+                            obisIsValueDate = re.findall(P1Sequence.REGEXP_OBIS_VALUE_DATE, obisValue)
+                            if (obisIsValueDate):
+                                dateTxt = obisIsValueDate[0][0]
+                                tzTxt = obisIsValueDate[0][1]
+
+                                is_dst = (tzTxt == "S")
+                                thisDate = datetime(year = int(dateTxt[0:2]) + 2000, month = int(dateTxt[2:4]), day = int(dateTxt[4:6]), hour = int(dateTxt[6:8]), minute = int(dateTxt[8:10]), second = int(dateTxt[10:12]))
+                                localThisDateTime = self._smartMeterTimezone.localize(thisDate, is_dst)
+                                obisContents.append({
+                                    "value": localThisDateTime.astimezone(self._systemTimeZone)
+                                })
+                            else:
+                                obisIsValueCode = re.findall(P1Sequence.REGEXP_OBIS_VALUE_CODE, obisValue)
+                                if (obisIsValueCode):
+                                    theCode = obisIsValueCode[0][0]
+                                    obisContents.append({
+                                        "value": theCode
+                                    })
+                                else:
+                                    obisIsValueText = re.findall(P1Sequence.REGEXP_OBIS_VALUE_TEXT, obisValue)
+                                    if (obisIsValueText):
+                                        theText = obisIsValueText[0]
+                                        obisContents.append({
+                                            "value": theText
+                                        })
+
+                    self._informations[obisIdentifier] = list(obisContents)
 
     def addInformation(self, obisIdentifier: str, obisValue: float, obisUnit: str = None):
         self._informations[obisIdentifier] = [
