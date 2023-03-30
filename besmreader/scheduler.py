@@ -1,5 +1,6 @@
 from statistics import mean
 from datetime import datetime
+from collections import deque
 
 from .sequence import P1Sequence
 
@@ -34,8 +35,12 @@ class P1Scheduler:
                 if (schedule["mode"] == "changed"):
                     formerSequence = self.__cachedSequences.get(scheduleIndex)
                     if (not formerSequence is None):
-                        # TODO
-                        pass
+                        actualApplyTo = deque()
+                        for obisCode in applyToSchedule:
+                            if (p1Sequence.getInformationValue(obisCode) != self.__cachedSequences[scheduleIndex].getInformationValue(obisCode)):
+                                actualApplyTo.append(obisCode)
+                        applyToSchedule = list(actualApplyTo)
+                    
                     self.__cachedSequences[scheduleIndex] = p1Sequence
                     pass
 
