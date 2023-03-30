@@ -64,7 +64,7 @@
                 "1-0:32.7.0": "smartmeter/electricity/instant/L1/tension"                
             }
         },
-        "mqttShirka": {
+        "mqttOpenHAB": {
             "type": "mqtt",
             "broker": "your.mqtt.domain.name.or.ip",
             "port": 8883,
@@ -92,7 +92,7 @@
     "scheduling": [
         {
             "cronFormat": "* * * * *",
-            "processor": "mqttShirka",
+            "processor": "mqttOpenHAB",
             "mode": "changed",
             "applyTo": [
                 "1-0:1.8.0",
@@ -104,8 +104,21 @@
             ]
         },
         {
+            "cronFormat": "0/30 * * * * 30",
+            "processor": "mqttOpenHAB",
+            "mode": "current",
+            "applyTo": [
+                "1-0:1.8.0",
+                "1-0:1.8.1",
+                "1-0:1.8.2",
+                "1-0:2.8.0",
+                "1-0:2.8.1",
+                "1-0:2.8.2"
+            ]
+        },
+        {
             "cronFormat": "* * * * * 0/20",
-            "processor": "mqttShirka",
+            "processor": "mqttOpenHAB",
             "mode": "average",
             "applyTo": [
                 "1-0:21.7.0",
