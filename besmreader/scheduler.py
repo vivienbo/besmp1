@@ -10,7 +10,6 @@ class P1Scheduler:
     def __init__(self, config):
         self.__schedules = config.scheduling
         self.__config = config
-        self.__cachedSequences = dict()
 
     def processP1(self, p1Sequence: P1Sequence) -> None:
         if (not p1Sequence.hasTimeinSystemTimezone):
@@ -18,12 +17,10 @@ class P1Scheduler:
         
         p1Sequence.applyTransformations()
 
-        scheduleIndex = 0
-        while (scheduleIndex < len(self.__schedules)):
-            schedule = self.__schedules[scheduleIndex]
+        for schedule in self.__schedules:
             applyToSchedule = schedule["applyTo"]
 
-            if (p1Sequence.messageTimeinSystemTimezone >= schedule["cron_next_trigger"]):
+            if ((p1Sequence.hasTimeinSystemTimezone) and (p1Sequence.messageTimeinSystemTimezone >= schedule["cron_next_trigger"])):
                 self.processor = self.__config.getProcessor(schedule["processor"])
 
                 if (schedule["mode"] == "average"):
@@ -33,15 +30,15 @@ class P1Scheduler:
                         schedule["history"][obisId].clear()
 
                 if (schedule["mode"] == "changed"):
-                    formerSequence = self.__cachedSequences.get(scheduleIndex)
+                    formerSequence = schedule.get("_previousSequence")
                     if (not formerSequence is None):
                         actualApplyTo = deque()
                         for obisCode in applyToSchedule:
-                            if (p1Sequence.getInformationValue(obisCode) != self.__cachedSequences[scheduleIndex].getInformationValue(obisCode)):
+                            if (p1Sequence.getInformationValue(obisCode) != schedule["_previousSequence"].getInformationValue(obisCode)):
                                 actualApplyTo.append(obisCode)
                         applyToSchedule = list(actualApplyTo)
                     
-                    self.__cachedSequences[scheduleIndex] = p1Sequence
+                    schedule["_previousSequence"] = p1Sequence
                     pass
 
                 self.processor.processSequence(p1Sequence, applyToSchedule)
@@ -52,4 +49,3 @@ class P1Scheduler:
                     for obisId in applyToSchedule:
                         if (p1Sequence.hasInformation(obisId)):
                             schedule["history"][obisId].append(p1Sequence.getInformationValue(obisId))
-            scheduleIndex += 1
