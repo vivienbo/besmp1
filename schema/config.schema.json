@@ -90,7 +90,7 @@
           },
           "mode": {
             "type": "string",
-            "enum": ["current", "average"]
+            "enum": ["current", "average", "changed"]
           },
           "applyTo": {
             "type": "array",
