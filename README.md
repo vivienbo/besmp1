@@ -83,10 +83,9 @@ flowchart LR
 * **MQTT Server**: Mosquitto version 2.0.14
 * **OpenHAB Server**: OpenHAB version 3.4
 
-## Known Limitation
+## Known Limitations
 
-* If multiple values are returned in an OBIS entry, only the first value is returned (#4)
-* Dates in values are not supported (eg in case of Water meter centralized by Electricity Smart Meter or for measuring peak consumption with Fluvius, not yet used by Ores and Resa but already calculated)
+* None remaining, open an issue if you find a bug or need an enhancement
 
 ## TODO
 
