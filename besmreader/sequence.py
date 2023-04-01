@@ -113,47 +113,52 @@ class P1Sequence:
                     if (obisIsDate):
                         self.__setMessageTimeInSystemTimezone(obisIsDate[0][0], obisIsDate[0][1])
                 else:
-                    obisContents = deque()
-                    for obisValue in obisData[1:]:
-                        obisIsValueDecimal = re.findall(P1Sequence.REGEXP_OBIS_VALUE_DECIMAL, obisValue)
-                        if (obisIsValueDecimal):
-                            theValue = Decimal(obisIsValueDecimal[0][1])
-                            theUnit = obisIsValueDecimal[0][4]
-                            theData = {
-                                "value": theValue
-                            }
-                            if (theUnit != ''):
-                                theData["unit"] = theUnit
-                            obisContents.append(theData)
-                            pass
-                        else:
-                            obisIsValueDate = re.findall(P1Sequence.REGEXP_OBIS_VALUE_DATE, obisValue)
-                            if (obisIsValueDate):
-                                dateTxt = obisIsValueDate[0][0]
-                                tzTxt = obisIsValueDate[0][1]
-
-                                is_dst = (tzTxt == "S")
-                                thisDate = datetime(year = int(dateTxt[0:2]) + 2000, month = int(dateTxt[2:4]), day = int(dateTxt[4:6]), hour = int(dateTxt[6:8]), minute = int(dateTxt[8:10]), second = int(dateTxt[10:12]))
-                                localThisDateTime = self._smartMeterTimezone.localize(thisDate, is_dst)
-                                obisContents.append({
-                                    "value": localThisDateTime.astimezone(self._systemTimeZone)
-                                })
+                    try:
+                        obisContents = deque()
+                        for obisValue in obisData[1:]:
+                            obisIsValueDecimal = re.findall(P1Sequence.REGEXP_OBIS_VALUE_DECIMAL, obisValue)
+                            if (obisIsValueDecimal):
+                                theValue = Decimal(obisIsValueDecimal[0][1])
+                                theUnit = obisIsValueDecimal[0][4]
+                                theData = {
+                                    "value": theValue
+                                }
+                                if (theUnit != ''):
+                                    theData["unit"] = theUnit
+                                obisContents.append(theData)
+                                pass
                             else:
-                                obisIsValueCode = re.findall(P1Sequence.REGEXP_OBIS_VALUE_CODE, obisValue)
-                                if (obisIsValueCode):
-                                    theCode = obisIsValueCode[0][0]
+                                obisIsValueDate = re.findall(P1Sequence.REGEXP_OBIS_VALUE_DATE, obisValue)
+                                if (obisIsValueDate):
+                                    dateTxt = obisIsValueDate[0][0]
+                                    tzTxt = obisIsValueDate[0][1]
+
+                                    is_dst = (tzTxt == "S")
+                                    thisDate = datetime(year = int(dateTxt[0:2]) + 2000, month = int(dateTxt[2:4]), day = int(dateTxt[4:6]), hour = int(dateTxt[6:8]), minute = int(dateTxt[8:10]), second = int(dateTxt[10:12]))
+                                    localThisDateTime = self._smartMeterTimezone.localize(thisDate, is_dst)
                                     obisContents.append({
-                                        "value": theCode
+                                        "value": localThisDateTime.astimezone(self._systemTimeZone)
                                     })
                                 else:
-                                    obisIsValueText = re.findall(P1Sequence.REGEXP_OBIS_VALUE_TEXT, obisValue)
-                                    if (obisIsValueText):
-                                        theText = obisIsValueText[0]
+                                    obisIsValueCode = re.findall(P1Sequence.REGEXP_OBIS_VALUE_CODE, obisValue)
+                                    if (obisIsValueCode):
+                                        theCode = obisIsValueCode[0][0]
                                         obisContents.append({
-                                            "value": theText
+                                            "value": theCode
                                         })
+                                    else:
+                                        obisIsValueText = re.findall(P1Sequence.REGEXP_OBIS_VALUE_TEXT, obisValue)
+                                        if (obisIsValueText):
+                                            theText = obisIsValueText[0]
+                                            obisContents.append({
+                                                "value": theText
+                                            })
 
-                    self._informations[obisIdentifier] = list(obisContents)
+                        self._informations[obisIdentifier] = list(obisContents)
+                    except Exception as exceptionMet:
+                        super().logger.debug('Exception while parsing OBIS data: %s', str(type(exceptionMet)))
+                        super().logger.info('OBIS dataline not parsed: %s', str(dataLine))
+                        pass
 
     def addInformation(self, obisIdentifier: str, obisValue: float, obisUnit: str = None):
         self._informations[obisIdentifier] = [
