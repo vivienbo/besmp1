@@ -85,10 +85,10 @@ class ParseP1RawDataThread (Thread, LoggedClass):
                     else:
                         self.currentSequence.addInformationFromDataLine(cleanDataLine)
         except Exception as exceptionMet:
-            super().logger.error('Exception while parsing raw data: %s', str(type(exceptionMet)))
-            super().logger.exception("Stack Trace")
-
-            self.stopReadingEvent.set()
+            if (not self.stopReadingEvent.is_set()):
+                super().logger.error('Exception while parsing raw data: %s', str(type(exceptionMet)))
+                super().logger.exception("Stack Trace")
+                self.stopReadingEvent.set()
         
         super().logger.info('Stopped')
 
@@ -125,9 +125,10 @@ class ProcessP1SequencesThread(Thread, LoggedClass):
                 if (p1Sequence is not None):
                     self.globalConfiguration.scheduler.processP1(p1Sequence)
         except Exception as exceptionMet:
-            super().logger.error('Exception processing sequences: %s', str(type(exceptionMet)))
-            super().logger.exception("Stack Trace")
-            self.stopReadingEvent.set()
+            if (not self.stopReadingEvent.is_set()):
+                super().logger.error('Exception processing sequences: %s', str(type(exceptionMet)))
+                super().logger.exception("Stack Trace")
+                self.stopReadingEvent.set()
         
         super().logger.info('Stopped')
 
