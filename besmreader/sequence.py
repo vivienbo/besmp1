@@ -96,8 +96,6 @@ class P1Sequence:
 
     def addInformationFromDataLine(self, dataLine: str):
         if (self.__keepAcceptingInformation()):
-            reValueRead = re.findall(r'(\d+-\d+:\d+\.\d+\.\d+(\.\d+)?(\*\d+)?)\(((\d+(\.\d+)?)(\*(\w+))?)?\)', dataLine)
-
             foundOBISInfo = re.findall(P1Sequence.REGEXP_OBIS_CODE_AND_VALUES, dataLine)
 
             if (foundOBISInfo):
