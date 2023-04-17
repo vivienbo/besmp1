@@ -99,17 +99,12 @@ class MQTTP1Processor (P1Processor, LoggedClass):
         A P1 Port Information processor that sends data to MQTT
     """
 
-    @staticmethod
-    def on_connect(client: paho.Client, userdata, flags, rc) -> None:
-        if (rc==0):
-            super().logger.info("MQTT: Connected successfully")
-        else:
-            super().logger.error("MQTT: Bad connection Returned code rc=", rc)
-
     def __init__(self, processorConfig: dict) -> None:
         P1Processor.__init__(self, processorConfig)
         LoggedClass.__init__(self)
 
+        self.__already_connected_once = False
+        self.__assume_connected = False
         pahoClientInit = dict()
 
         pahoClientInit["transport"] = "tcp"
@@ -130,7 +125,6 @@ class MQTTP1Processor (P1Processor, LoggedClass):
             pahoClientInit["protocol"] = paho.__dict__[self._processorConfig["protocol"]]
 
         self._mqttClient = paho.Client(**pahoClientInit)
-        self._mqttClient.on_connect = MQTTP1Processor.on_connect
         
         #
         # Websockets endpoint and headers configuration
@@ -206,18 +200,26 @@ class MQTTP1Processor (P1Processor, LoggedClass):
 
     def connectMQTT(self) -> None:
         try:
-            self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['port'], 60)    
+            if (not self.__already_connected_once):
+                self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['port'], 60)
+                self.__already_connected_once = True
+                super().logger.info('MQTT connected for the first time')
+            else:
+                self._mqttClient.reconnect()
+                super().logger.info('MQTT reconnected')
+            self.__assume_connected = True
         except:
             super().logger.error('MQTT connect failed')
 
     def processInformation(self, processLabel: str, processValue: str, processUnit: str) -> None:
         try:
-            if (not self._mqttClient.is_connected):
+            if (not self.__assume_connected):
                 self.connectMQTT()
             self._mqttClient.publish(topic=processLabel, payload=str(processValue))
         except:
             super().logger.error('MQTT publish failed for %s %s', str(processValue), str(processUnit))
             super().logger.info('MQTT will try to reconnect on next schedule')
+            self.__assume_connected = False
 
     def closeProcessor(self) -> None:
         try:
