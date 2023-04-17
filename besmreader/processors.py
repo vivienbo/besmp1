@@ -205,15 +205,25 @@ class MQTTP1Processor (P1Processor, LoggedClass):
         self.connectMQTT()
 
     def connectMQTT(self) -> None:
-        self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['port'], 60)    
+        try:
+            self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['port'], 60)    
+        except:
+            super().logger.error('MQTT connect failed')
 
     def processInformation(self, processLabel: str, processValue: str, processUnit: str) -> None:
-        if (not self._mqttClient.is_connected):
-            self.connectMQTT()
-        self._mqttClient.publish(topic=processLabel, payload=str(processValue))
+        try:
+            if (not self._mqttClient.is_connected):
+                self.connectMQTT()
+            self._mqttClient.publish(topic=processLabel, payload=str(processValue))
+        except:
+            super().logger.error('MQTT publish failed for %s %s', str(processValue), str(processUnit))
+            super().logger.info('MQTT will try to reconnect on next schedule')
 
     def closeProcessor(self) -> None:
-        self._mqttClient.disconnect()
+        try:
+            self._mqttClient.disconnect()
+        except:
+            super().logger.error('MQTT disconnect failed')
     
     @staticmethod
     def getConfigurationName() -> str:
