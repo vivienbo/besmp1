@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from paho.mqtt import client as paho
 from jsonschema import validate as jsvalidate
+from datetime import datetime, timedelta
 import json
 
 from .helper import LoggedClass
@@ -105,6 +106,7 @@ class MQTTP1Processor (P1Processor, LoggedClass):
 
         self.__already_connected_once = False
         self.__assume_connected = False
+        self.__cooldown = None
         pahoClientInit = dict()
 
         pahoClientInit["transport"] = "tcp"
@@ -200,16 +202,19 @@ class MQTTP1Processor (P1Processor, LoggedClass):
 
     def connectMQTT(self) -> None:
         try:
-            if (not self.__already_connected_once):
-                self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['port'], 60)
-                self.__already_connected_once = True
-                super().logger.info('MQTT connected for the first time')
-            else:
-                self._mqttClient.reconnect()
-                super().logger.info('MQTT reconnected')
-            self.__assume_connected = True
+            if ((self.__cooldown is None) or (datetime.now() >= self.__cooldown)):
+                if (not self.__already_connected_once):
+                    self._mqttClient.connect(self._processorConfig['broker'], self._processorConfig['port'], 60)
+                    self.__already_connected_once = True
+                    super().logger.info('MQTT connected for the first time')
+                else:
+                    self._mqttClient.reconnect()
+                    super().logger.info('MQTT reconnected')
+                self.__assume_connected = True
+                self.__cooldown = None
         except:
-            super().logger.error('MQTT connect failed')
+            super().logger.error('MQTT (re)connect failed. Cooling down for 2 seconds.')
+            self.__cooldown = datetime.now() + timedelta(seconds = 2)
 
     def processInformation(self, processLabel: str, processValue: str, processUnit: str) -> None:
         try:
